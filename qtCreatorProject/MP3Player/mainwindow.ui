@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MainWindow</class>
- <widget class="QMainWindow" name="MainWindow">
+ <class>mainWindow</class>
+ <widget class="QMainWindow" name="mainWindow">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -9,6 +9,24 @@
     <width>631</width>
     <height>431</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>631</width>
+    <height>431</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>631</width>
+    <height>431</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>MP3 Player</string>
@@ -180,7 +198,7 @@
         <x>-1</x>
         <y>-1</y>
         <width>271</width>
-        <height>181</height>
+        <height>203</height>
        </rect>
       </property>
       <layout class="QFormLayout" name="formLayout">
@@ -283,16 +301,6 @@
      <string>Directory label</string>
     </property>
    </widget>
-   <zorder>listWidget</zorder>
-   <zorder>slider</zorder>
-   <zorder>horizontalLayoutWidget</zorder>
-   <zorder>volumeProgressBar</zorder>
-   <zorder>volumeDial</zorder>
-   <zorder>horizontalLayoutWidget_2</zorder>
-   <zorder>muteButton</zorder>
-   <zorder>scrollArea</zorder>
-   <zorder>songNameLabel</zorder>
-   <zorder>directoryLabel</zorder>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
