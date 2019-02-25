@@ -150,7 +150,7 @@ class Ui_mainWindow(object):
         self.songNameLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.songNameLabel.setObjectName("songNameLabel")
         self.directoryLabel = QtWidgets.QLabel(self.centralWidget)
-        self.directoryLabel.setGeometry(QtCore.QRect(20, 0, 281, 16))
+        self.directoryLabel.setGeometry(QtCore.QRect(20, 0, 581, 16))
         self.directoryLabel.setObjectName("directoryLabel")
         mainWindow.setCentralWidget(self.centralWidget)
         self.menuBar = QtWidgets.QMenuBar(mainWindow)
