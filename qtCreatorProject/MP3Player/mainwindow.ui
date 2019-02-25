@@ -297,7 +297,7 @@
       </rect>
      </property>
      <property name="value">
-      <number>24</number>
+      <number>20</number>
      </property>
     </widget>
     <widget class="QDial" name="volumeDial">
@@ -311,6 +311,19 @@
      </property>
      <property name="maximum">
       <number>100</number>
+     </property>
+    </widget>
+    <widget class="QLabel" name="volumeLabel">
+     <property name="geometry">
+      <rect>
+       <x>90</x>
+       <y>30</y>
+       <width>31</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>20</string>
      </property>
     </widget>
    </widget>

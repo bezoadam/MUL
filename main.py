@@ -41,11 +41,7 @@ class Mp3Player(QtWidgets.QMainWindow, qtCreatorProject.MP3Player.mp3PlayerGUI.U
         print("handle search")
 
     def handleProgressBarValue(self, value):
-        print(value)
-
-    def setValue(self, value):
-        print(value)
-        self.volumeProgressBar.setValue(value)
+        self.volumeLabel.setText(str(value))
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
