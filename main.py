@@ -1,6 +1,7 @@
 import sys
 import os
 import vlc
+import time
 from os import walk, path
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -24,6 +25,7 @@ class Mp3Player(QtWidgets.QMainWindow, qtCreatorProject.MP3Player.mp3PlayerGUI.U
         self.stopButton.clicked.connect(self.handleStopButton)
         self.previousButton.clicked.connect(self.handlePreviousButton)
         self.nextButton.clicked.connect(self.handleNextButton)
+        self.muteButton.clicked.connect(self.handleMuteButton)
 
     def setupValueChanged(self):
         self.volumeProgressBar.valueChanged.connect(self.handleProgressBarValue)
@@ -63,10 +65,22 @@ class Mp3Player(QtWidgets.QMainWindow, qtCreatorProject.MP3Player.mp3PlayerGUI.U
             self.player.set_media(media)
             self.player.play()
 
+            duration = self.player.get_length() / 1000
+            mm, ss = divmod(duration, 60)
+
+            print ("Current song is : ", songName, "Length:", "%02d:%02d" % (mm, ss))
+
     def handleStopButton(self):
+        print(self.player.get_length())
         self.songNameLabel.setText("")
         self.songNameLabel.repaint()
         self.player.stop()
+
+    def handleMuteButton(self):
+        self.player.audio_toggle_mute()
+        iconPath = "icon/unmute.png" if self.player.audio_get_mute() else "icon/mute.png"
+        self.muteButton.setIcon(QtGui.QIcon(iconPath))
+        self.muteButton.repaint()
 
     def handlePreviousButton(self):
         pass

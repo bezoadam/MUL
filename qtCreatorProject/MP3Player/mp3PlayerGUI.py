@@ -65,7 +65,7 @@ class Ui_mainWindow(object):
         self.nextButton.setObjectName("nextButton")
         self.horizontalLayout.addWidget(self.nextButton)
         self.horizontalLayoutWidget_2 = QtWidgets.QWidget(self.centralWidget)
-        self.horizontalLayoutWidget_2.setGeometry(QtCore.QRect(460, 330, 215, 51))
+        self.horizontalLayoutWidget_2.setGeometry(QtCore.QRect(460, 340, 151, 41))
         self.horizontalLayoutWidget_2.setObjectName("horizontalLayoutWidget_2")
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget_2)
         self.horizontalLayout_2.setContentsMargins(11, 11, 11, 11)

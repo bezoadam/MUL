@@ -115,9 +115,9 @@
     <property name="geometry">
      <rect>
       <x>460</x>
-      <y>330</y>
-      <width>215</width>
-      <height>51</height>
+      <y>340</y>
+      <width>151</width>
+      <height>41</height>
      </rect>
     </property>
     <layout class="QHBoxLayout" name="horizontalLayout_2">
