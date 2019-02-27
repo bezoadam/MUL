@@ -256,7 +256,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Song name Label</string>
+     <string/>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>

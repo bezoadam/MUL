@@ -55,13 +55,17 @@ class Mp3Player(QtWidgets.QMainWindow, qtCreatorProject.MP3Player.mp3PlayerGUI.U
         currentItem = self.listWidget.currentItem()
         if currentItem is not None:
             songName = currentItem.text()
+            print(songName)
+            self.songNameLabel.setText(songName)
+            self.songNameLabel.repaint()
             songNamePath = self.directoryLabel.text().title() + "/" + songName
-            print(songNamePath)
             media = self.instance.media_new(songNamePath)
             self.player.set_media(media)
             self.player.play()
 
     def handleStopButton(self):
+        self.songNameLabel.setText("")
+        self.songNameLabel.repaint()
         self.player.stop()
 
     def handlePreviousButton(self):
