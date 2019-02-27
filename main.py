@@ -51,6 +51,7 @@ class Mp3Player(QtWidgets.QMainWindow, qtCreatorProject.MP3Player.mp3PlayerGUI.U
         print("handle search")
 
     def handleProgressBarValue(self, value):
+        self.player.audio_set_volume(value)
         self.volumeLabel.setText(str(value))
 
     def handlePlayButton(self):
@@ -64,6 +65,8 @@ class Mp3Player(QtWidgets.QMainWindow, qtCreatorProject.MP3Player.mp3PlayerGUI.U
             media = self.instance.media_new(songNamePath)
             self.player.set_media(media)
             self.player.play()
+            initialVolume = self.volumeLabel.text()
+            self.player.audio_set_volume(int(initialVolume))
 
             duration = self.player.get_length() / 1000
             mm, ss = divmod(duration, 60)
