@@ -2,6 +2,7 @@ import sys
 import os
 import vlc
 import time
+import threading
 from random import randint
 from os import walk, path
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -13,12 +14,32 @@ class Mp3Player(QtWidgets.QMainWindow, qtCreatorProject.MP3Player.mp3PlayerGUI.U
     instance = vlc.Instance()
     player = instance.media_player_new()
     songsLoaded = False
+    f_stop = threading.Event()
 
     def __init__(self):
         super(self.__class__, self).__init__()
         self.setupUi(self)
         self.setupActions()
         self.setupValueChanged()
+        self.mockMp3()
+
+    #TODO Delete this
+    def mockMp3(self):
+        path = "mp3/"
+        if os.path.isdir(path):
+            self.listWidget.clear()
+            self.directoryLabel.setText(path)
+            f = []
+            for (dirpath, dirnames, filenames) in walk(path):
+                files = [fi for fi in filenames if fi.endswith(".mp3")]
+                f.extend(files)
+                break
+
+            for file in sorted(f):
+                item = QtWidgets.QListWidgetItem(file)
+                self.listWidget.addItem(item)
+
+            self.songsLoaded = True
 
     def setupActions(self):
         self.actionFile.triggered.connect(self.handleActionFile)
@@ -74,11 +95,8 @@ class Mp3Player(QtWidgets.QMainWindow, qtCreatorProject.MP3Player.mp3PlayerGUI.U
             self.player.play()
             initialVolume = self.volumeLabel.text()
             self.player.audio_set_volume(int(initialVolume))
-
-            duration = self.player.get_length() / 1000
-            mm, ss = divmod(duration, 60)
-
-            print ("Current song is : ", songName, "Length:", "%02d:%02d" % (mm, ss))
+            self.f_stop.clear()
+            self.f(self.f_stop)
 
     def handleStopButton(self):
         if not self.songsLoaded:
@@ -87,6 +105,7 @@ class Mp3Player(QtWidgets.QMainWindow, qtCreatorProject.MP3Player.mp3PlayerGUI.U
         self.songNameLabel.setText("")
         self.songNameLabel.repaint()
         self.player.stop()
+        self.f_stop.set()
 
     def handleMuteButton(self):
         self.player.audio_toggle_mute()
@@ -117,6 +136,15 @@ class Mp3Player(QtWidgets.QMainWindow, qtCreatorProject.MP3Player.mp3PlayerGUI.U
         self.listWidget.repaint()
         self.handlePlayButton()
 
+    def f(self, f_stop):
+        if self.player.is_playing():
+            length = self.player.get_length()
+            dbl = length * 0.001
+            elapsedTime = self.player.get_time() * 0.001
+            self.slider.setMaximum(int(dbl))
+            self.slider.setValue(int(elapsedTime))
+        if not f_stop.is_set():
+            threading.Timer(1, self.f, [f_stop]).start()
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
