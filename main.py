@@ -86,10 +86,17 @@ class Mp3Player(QtWidgets.QMainWindow, qtCreatorProject.MP3Player.mp3PlayerGUI.U
         self.muteButton.repaint()
 
     def handlePreviousButton(self):
-        pass
-
+        currentIndex = self.listWidget.currentIndex()
+        if not currentIndex.row() == 0:
+            self.listWidget.setCurrentRow(currentIndex.row() - 1)
+            self.listWidget.repaint()
+            self.handlePlayButton()
     def handleNextButton(self):
-        pass
+        currentIndex = self.listWidget.currentIndex()
+        if not currentIndex.row() + 1 > self.listWidget.count() - 1:
+            self.listWidget.setCurrentRow(currentIndex.row() + 1)
+            self.listWidget.repaint()
+            self.handlePlayButton()
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
