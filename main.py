@@ -2,6 +2,7 @@ import sys
 import os
 import vlc
 import time
+from random import randint
 from os import walk, path
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -11,6 +12,7 @@ class Mp3Player(QtWidgets.QMainWindow, qtCreatorProject.MP3Player.mp3PlayerGUI.U
     valueChanged = QtCore.pyqtSignal(int)
     instance = vlc.Instance()
     player = instance.media_player_new()
+    songsLoaded = False
 
     def __init__(self):
         super(self.__class__, self).__init__()
@@ -26,6 +28,7 @@ class Mp3Player(QtWidgets.QMainWindow, qtCreatorProject.MP3Player.mp3PlayerGUI.U
         self.previousButton.clicked.connect(self.handlePreviousButton)
         self.nextButton.clicked.connect(self.handleNextButton)
         self.muteButton.clicked.connect(self.handleMuteButton)
+        self.shuffleButton.clicked.connect(self.handleShuffleButton)
 
     def setupValueChanged(self):
         self.volumeProgressBar.valueChanged.connect(self.handleProgressBarValue)
@@ -47,6 +50,8 @@ class Mp3Player(QtWidgets.QMainWindow, qtCreatorProject.MP3Player.mp3PlayerGUI.U
                 item = QtWidgets.QListWidgetItem(file)
                 self.listWidget.addItem(item)
 
+            self.songsLoaded = True
+
     def handleActionSearch(self):
         print("handle search")
 
@@ -55,6 +60,8 @@ class Mp3Player(QtWidgets.QMainWindow, qtCreatorProject.MP3Player.mp3PlayerGUI.U
         self.volumeLabel.setText(str(value))
 
     def handlePlayButton(self):
+        if not self.songsLoaded:
+            return
         currentItem = self.listWidget.currentItem()
         if currentItem is not None:
             songName = currentItem.text()
@@ -74,6 +81,8 @@ class Mp3Player(QtWidgets.QMainWindow, qtCreatorProject.MP3Player.mp3PlayerGUI.U
             print ("Current song is : ", songName, "Length:", "%02d:%02d" % (mm, ss))
 
     def handleStopButton(self):
+        if not self.songsLoaded:
+            return
         print(self.player.get_length())
         self.songNameLabel.setText("")
         self.songNameLabel.repaint()
@@ -86,17 +95,28 @@ class Mp3Player(QtWidgets.QMainWindow, qtCreatorProject.MP3Player.mp3PlayerGUI.U
         self.muteButton.repaint()
 
     def handlePreviousButton(self):
+        if not self.songsLoaded:
+            return
         currentIndex = self.listWidget.currentIndex()
         if not currentIndex.row() == 0:
             self.listWidget.setCurrentRow(currentIndex.row() - 1)
             self.listWidget.repaint()
             self.handlePlayButton()
     def handleNextButton(self):
+        if not self.songsLoaded:
+            return
         currentIndex = self.listWidget.currentIndex()
         if not currentIndex.row() + 1 > self.listWidget.count() - 1:
             self.listWidget.setCurrentRow(currentIndex.row() + 1)
             self.listWidget.repaint()
             self.handlePlayButton()
+
+    def handleShuffleButton(self):
+        randomNumber = randint(0, self.listWidget.count() - 1)
+        self.listWidget.setCurrentRow(randomNumber)
+        self.listWidget.repaint()
+        self.handlePlayButton()
+
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
