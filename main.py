@@ -9,16 +9,34 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 import qtCreatorProject.MP3Player.mp3PlayerGUI
 
+class JumpSlider(QtWidgets.QSlider):
+
+    def __init__(self, widget, player):
+        self.player = player
+        QtWidgets.QSlider.__init__(self, widget)
+
+    def mousePressEvent(self, ev):
+        """ Jump to click position """
+        newValue = QtWidgets.QStyle.sliderValueFromPosition(self.minimum(), self.maximum(), ev.x(), self.width())
+        self.player.set_time(newValue * 1000)
+
+    def mouseMoveEvent(self, ev):
+        """ Jump to pointer position while moving """
+        newValue = QtWidgets.QStyle.sliderValueFromPosition(self.minimum(), self.maximum(), ev.x(), self.width())
+        self.player.set_time(newValue * 1000)
+
 class Mp3Player(QtWidgets.QMainWindow, qtCreatorProject.MP3Player.mp3PlayerGUI.Ui_mainWindow):
     valueChanged = QtCore.pyqtSignal(int)
     instance = vlc.Instance()
     player = instance.media_player_new()
     songsLoaded = False
     f_stop = threading.Event()
+    songDuration = None
 
     def __init__(self):
         super(self.__class__, self).__init__()
         self.setupUi(self)
+        self.setupCustomSlider()
         self.setupActions()
         self.setupValueChanged()
         self.mockMp3()
@@ -55,6 +73,12 @@ class Mp3Player(QtWidgets.QMainWindow, qtCreatorProject.MP3Player.mp3PlayerGUI.U
         self.volumeProgressBar.valueChanged.connect(self.handleProgressBarValue)
         self.volumeDial.valueChanged.connect(self.volumeProgressBar.setValue)
         self.volumeDial.valueChanged.connect(self.valueChanged)
+
+    def setupCustomSlider(self):
+        self.slider = JumpSlider(self.centralWidget, self.player)
+        self.slider.setGeometry(QtCore.QRect(20, 300, 281, 22))
+        self.slider.setOrientation(QtCore.Qt.Horizontal)
+        self.slider.setObjectName("slider")
 
     def handleActionFile(self):
         path = str(QtWidgets.QFileDialog.getExistingDirectory(self, "Select Directory"))
@@ -93,17 +117,19 @@ class Mp3Player(QtWidgets.QMainWindow, qtCreatorProject.MP3Player.mp3PlayerGUI.U
             media = self.instance.media_new(songNamePath)
             self.player.set_media(media)
             self.player.play()
+            self.songDuration = None
             initialVolume = self.volumeLabel.text()
             self.player.audio_set_volume(int(initialVolume))
+            self.slider.setValue(0)
             self.f_stop.clear()
             self.f(self.f_stop)
 
     def handleStopButton(self):
         if not self.songsLoaded:
             return
-        print(self.player.get_length())
         self.songNameLabel.setText("")
         self.songNameLabel.repaint()
+        self.slider.setValue(0)
         self.player.stop()
         self.f_stop.set()
 
@@ -138,10 +164,11 @@ class Mp3Player(QtWidgets.QMainWindow, qtCreatorProject.MP3Player.mp3PlayerGUI.U
 
     def f(self, f_stop):
         if self.player.is_playing():
-            length = self.player.get_length()
-            dbl = length * 0.001
+            if self.songDuration is None:
+                length = self.player.get_length()
+                self.songDuration = length * 0.001
             elapsedTime = self.player.get_time() * 0.001
-            self.slider.setMaximum(int(dbl))
+            self.slider.setMaximum(int(self.songDuration))
             self.slider.setValue(int(elapsedTime))
         if not f_stop.is_set():
             threading.Timer(1, self.f, [f_stop]).start()
