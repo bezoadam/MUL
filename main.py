@@ -63,6 +63,12 @@ class Mp3Player(QtWidgets.QMainWindow, qtCreatorProject.MP3Player.mp3PlayerGUI.U
     def setupActions(self):
         self.actionFile.triggered.connect(self.handleActionFile)
         self.actionSearch.triggered.connect(self.handleActionSearch)
+        self.actionPlay.triggered.connect(self.handlePlayButton)
+        self.actionStop.triggered.connect(self.handleStopButton)
+        self.actionPrevious.triggered.connect(self.handlePreviousButton)
+        self.actionNext.triggered.connect(self.handleNextButton)
+        self.actionShuffle.triggered.connect(self.handleShuffleButton)
+        self.actionMute.triggered.connect(self.handleMuteButton)
         self.playButton.clicked.connect(self.handlePlayButton)
         self.stopButton.clicked.connect(self.handleStopButton)
         self.previousButton.clicked.connect(self.handlePreviousButton)
