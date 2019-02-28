@@ -27,6 +27,7 @@ class JumpSlider(QtWidgets.QSlider):
 
 class Mp3Player(QtWidgets.QMainWindow, qtCreatorProject.MP3Player.mp3PlayerGUI.Ui_mainWindow):
     valueChanged = QtCore.pyqtSignal(int)
+    sliderUpdated = QtCore.pyqtSignal(int)
     instance = vlc.Instance()
     player = instance.media_player_new()
     songsLoaded = False
@@ -79,6 +80,7 @@ class Mp3Player(QtWidgets.QMainWindow, qtCreatorProject.MP3Player.mp3PlayerGUI.U
         self.slider.setGeometry(QtCore.QRect(20, 300, 281, 22))
         self.slider.setOrientation(QtCore.Qt.Horizontal)
         self.slider.setObjectName("slider")
+        self.sliderUpdated.connect(self.updateSliderValue)
 
     def handleActionFile(self):
         path = str(QtWidgets.QFileDialog.getExistingDirectory(self, "Select Directory"))
@@ -120,7 +122,7 @@ class Mp3Player(QtWidgets.QMainWindow, qtCreatorProject.MP3Player.mp3PlayerGUI.U
             self.songDuration = None
             initialVolume = self.volumeLabel.text()
             self.player.audio_set_volume(int(initialVolume))
-            self.slider.setValue(0)
+            self.sliderUpdated.emit(0)
             self.f_stop.clear()
             self.f(self.f_stop)
 
@@ -129,7 +131,7 @@ class Mp3Player(QtWidgets.QMainWindow, qtCreatorProject.MP3Player.mp3PlayerGUI.U
             return
         self.songNameLabel.setText("")
         self.songNameLabel.repaint()
-        self.slider.setValue(0)
+        self.sliderUpdated.emit(0)
         self.player.stop()
         self.f_stop.set()
 
@@ -162,14 +164,19 @@ class Mp3Player(QtWidgets.QMainWindow, qtCreatorProject.MP3Player.mp3PlayerGUI.U
         self.listWidget.repaint()
         self.handlePlayButton()
 
+    def updateSliderValue(self, value):
+        self.slider.setValue(value)
+
     def f(self, f_stop):
         if self.player.is_playing():
             if self.songDuration is None:
                 length = self.player.get_length()
                 self.songDuration = length * 0.001
+                self.slider.setMaximum(int(self.songDuration))
             elapsedTime = self.player.get_time() * 0.001
-            self.slider.setMaximum(int(self.songDuration))
-            self.slider.setValue(int(elapsedTime))
+            self.sliderUpdated.emit(elapsedTime)
+            if abs(self.songDuration - elapsedTime) < 2.0:
+                self.handleNextButton()
         if not f_stop.is_set():
             threading.Timer(1, self.f, [f_stop]).start()
 
