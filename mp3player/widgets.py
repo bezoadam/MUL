@@ -3,11 +3,13 @@ from io import BytesIO
 from collections import OrderedDict
 import math
 from typing import Dict, Set, List
+import threading
 
 import mutagen
 from mutagen.mp3 import MP3
 from mutagen.id3 import ID3, TPE1, TIT2, TRCK, TALB, APIC, TORY, TCON, COMM
 from PyQt5 import QtWidgets, uic, Qt, QtGui
+import vlc
 
 
 class JumpSlider(QtWidgets.QSlider):
@@ -108,6 +110,8 @@ class MP3File(object):
 		self.reloadTagsFromFile()
 
 	def reloadCoverImage(self):
+		self.image = None
+
 		audio = MP3(self.path, ID3=ID3)
 		for key in audio.keys():
 			for tag in self.tag_2_property:
@@ -436,9 +440,23 @@ class MP3Player(QtWidgets.QMainWindow):
 		self.setupCustomWidgets()
 
 	def propertyInit(self):
+		# Window state
+		self.closed = False
+
+		# Player states
 		self.playState = self.STOPPED
 		self.shuffleState = self.UNSHUFFLE
 		self.muteState = self.UNMUTE
+
+		# MP3file
+		self.mp3file = None
+
+		# VLC player
+		self.media = None
+		self.vlcInstance = vlc.Instance()
+		self.vlcPlayer = self.vlcInstance.media_player_new()
+		self.vlcPlayer.audio_set_volume(100)
+		self.updatingPlayerState()
 
 		# Init sliders
 		self.volume = 100
@@ -447,9 +465,6 @@ class MP3Player(QtWidgets.QMainWindow):
 		self.songLength = 0
 		self.updateVolume(self.volume)
 		self.updateTimes(self.currentSeconds, self.songLength)
-
-		# MP3file
-		self.mp3file = None
 
 	def setupCustomWidgets(self):
 		self.tableWidget.setup(self)
@@ -481,6 +496,10 @@ class MP3Player(QtWidgets.QMainWindow):
 		QtWidgets.QShortcut(Qt.Qt.Key_Down, self, self.nextSong)
 		QtWidgets.QShortcut(Qt.Qt.Key_Up, self, self.previousSong)
 
+	def closeEvent(self, event):
+		self.closed = True
+		event.accept()
+
 	def handleSelectAll(self):
 		self.tableWidget.checkAllRows()
 
@@ -510,14 +529,18 @@ class MP3Player(QtWidgets.QMainWindow):
 
 	def handleRowClicked(self, row):
 		if row is None:
-			self.songBitRateLabel.setText("N/A")
-			self.updateTimes(currentSeconds=0, songLength=0)
-
-			self.clearTags()
-
+			self.mp3file = None
 		else:
 			self.mp3file = self.tableWidget.getMP3File(row)
-			print("Row: {}, mp3file: {}".format(row, self.mp3file.path))
+
+		self.reloadMP3File(self.mp3file)
+
+	def reloadMP3File(self, mp3file):
+		if mp3file is not None:
+			self.media = self.vlcInstance.media_new(mp3file.path)
+			self.vlcPlayer.set_media(self.media)
+			if self.playState == self.PLAYING and not self.vlcPlayer.is_playing():
+				self.vlcPlayer.play()
 
 			self.songBitRateLabel.setText(str(self.mp3file.songBitrate))
 			self.updateTimes(currentSeconds=0, songLength=self.mp3file.songLength)
@@ -525,6 +548,28 @@ class MP3Player(QtWidgets.QMainWindow):
 			self.fillTags(self.mp3file)
 			self.mp3file.reloadCoverImage()
 			self.redrawCoverImage()
+		else:
+			self.stop()
+			self.media = None
+
+			self.songBitRateLabel.setText("N/A")
+			self.updateTimes(currentSeconds=0, songLength=0)
+
+			self.clearTags()
+			self.mp3file.reloadCoverImage()
+			self.redrawCoverImage()
+
+	def updatingPlayerState(self):
+		if self.playState == self.PLAYING or self.playState == self.PAUSED:
+			songTime = int(self.vlcPlayer.get_time() * 0.001)
+			self.updateTimes(currentSeconds=songTime)
+
+		if self.playState == self.PLAYING and self.vlcPlayer.get_time() >= self.songLength * 1000:
+			print("Song ended, trying to play next song")
+			self.nextSong()
+
+		if not self.closed:
+			threading.Timer(0.2, self.updatingPlayerState).start()
 
 	def handleChooseImageButton(self):
 		path = QtWidgets.QFileDialog.getOpenFileName(self, "Select image cover", filter="images ({})".format(" ".join(["*." + i for i in MP3File.coverExtensions])))[0]
@@ -589,6 +634,9 @@ class MP3Player(QtWidgets.QMainWindow):
 			self.timeSlider.setSliderPosition(self.currentSeconds)
 			self.timeSlider.setMaximum(self.songLength)
 
+		if int(self.vlcPlayer.get_time() * 0.001) != self.currentSeconds:
+			self.vlcPlayer.set_time(self.currentSeconds * 1000)
+
 	def updateVolumeFromSlider(self):
 		self.updateVolume(int(self.volumeSlider.sliderPosition()), recurse=False)
 
@@ -604,6 +652,8 @@ class MP3Player(QtWidgets.QMainWindow):
 		if recurse:
 			self.volumeSlider.setSliderPosition(self.volume)
 
+		self.vlcPlayer.audio_set_volume(self.volume)
+
 	def mute(self):
 		self.previousVolume = self.volume
 		self.volume = 0
@@ -617,15 +667,20 @@ class MP3Player(QtWidgets.QMainWindow):
 		self.playState = self.PLAYING
 		self.playButton.setIcon(QtGui.QIcon("ui/icon/pause.png"))
 
+		self.vlcPlayer.play()
+
 	def stop(self):
 		self.playState = self.STOPPED
 		self.playButton.setIcon(QtGui.QIcon("ui/icon/play.png"))
 
 		self.updateTimes(currentSeconds=0)
+		self.vlcPlayer.stop()
 
 	def pause(self):
 		self.playState = self.PAUSED
 		self.playButton.setIcon(QtGui.QIcon("ui/icon/play.png"))
+
+		self.vlcPlayer.pause()
 
 	def nextSong(self):
 		self.tableWidget.selectNextRow()
