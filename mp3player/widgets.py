@@ -4,6 +4,7 @@ from collections import OrderedDict
 import math
 from typing import Dict, Set, List
 import threading
+import random
 
 import mutagen
 from mutagen.mp3 import MP3
@@ -279,22 +280,22 @@ class MP3Table(QtWidgets.QTableWidget):
 		if self.lastSelectedRow is not None:
 			self.setRangeSelected(QtWidgets.QTableWidgetSelectionRange(self.lastSelectedRow, 0, self.lastSelectedRow, self.columnCount() - 1), True)
 
-	def selectNextRow(self):
+	def selectNextRow(self, deterministic_next=True):
 		if not self.isEmpty():
 			if self.lastSelectedRow is None:
-				self.lastSelectedRow = 0
+				self.lastSelectedRow = 0 if deterministic_next else random.randint(0, self.rowCount() - 1)
 			else:
-				self.lastSelectedRow = (self.lastSelectedRow + 1) % self.rowCount()
+				self.lastSelectedRow = (self.lastSelectedRow + 1) % self.rowCount() if deterministic_next else (self.lastSelectedRow + random.randint(0, self.rowCount() - 1)) % self.rowCount()
 
 			self.selectRow()
 			self.mainWindow.handleRowClicked(self.lastSelectedRow)
 
-	def selectPreviousRow(self):
+	def selectPreviousRow(self, deterministic_next=True):
 		if not self.isEmpty():
 			if self.lastSelectedRow is None:
-				self.lastSelectedRow = 0
+				self.lastSelectedRow = 0 if deterministic_next else random.randint(0, self.rowCount() - 1)
 			else:
-				self.lastSelectedRow = (self.lastSelectedRow - 1) % self.rowCount()
+				self.lastSelectedRow = (self.lastSelectedRow - 1) % self.rowCount() if deterministic_next else (self.lastSelectedRow + random.randint(0, self.rowCount() - 1)) % self.rowCount()
 
 			self.selectRow()
 			self.mainWindow.handleRowClicked(self.lastSelectedRow)
@@ -568,8 +569,6 @@ class MP3Player(QtWidgets.QMainWindow):
 			self.redrawCoverImage()
 
 	def updatingPlayerState(self):
-		if self.vlcPlayer.is_playing():
-			print("Přehrávač hraje: {}".format(self.vlcPlayer.get_time()))
 		if self.playState == self.PLAYING or self.playState == self.PAUSED:
 			songTime = int(self.vlcPlayer.get_time() * 0.001)
 			self.updateTimes(currentSeconds=songTime)
@@ -655,9 +654,11 @@ class MP3Player(QtWidgets.QMainWindow):
 		if self.volume > 0:
 			self.muteState = self.UNMUTE
 			self.muteButton.setIcon(QtGui.QIcon("ui/icon/unmute.png"))
+			self.muteButton.setToolTip("Mute")
 		else:
 			self.muteState = self.MUTE
 			self.muteButton.setIcon(QtGui.QIcon("ui/icon/mute.png"))
+			self.muteButton.setToolTip("UnMute")
 
 		if recurse:
 			self.volumeSlider.setSliderPosition(self.volume)
@@ -682,12 +683,14 @@ class MP3Player(QtWidgets.QMainWindow):
 	def play(self):
 		self.playState = self.PLAYING
 		self.playButton.setIcon(QtGui.QIcon("ui/icon/pause.png"))
+		self.playButton.setToolTip("Pause")
 
 		self.vlcPlayer.play()
 
 	def stop(self):
 		self.playState = self.STOPPED
 		self.playButton.setIcon(QtGui.QIcon("ui/icon/play.png"))
+		self.stopButton.setToolTip("Stop")
 
 		self.updateTimes(currentSeconds=0)
 		self.vlcPlayer.stop()
@@ -695,22 +698,25 @@ class MP3Player(QtWidgets.QMainWindow):
 	def pause(self):
 		self.playState = self.PAUSED
 		self.playButton.setIcon(QtGui.QIcon("ui/icon/play.png"))
+		self.playButton.setToolTip("Play")
 
 		self.vlcPlayer.pause()
 
 	def nextSong(self):
-		self.tableWidget.selectNextRow()
+		self.tableWidget.selectNextRow(self.shuffleState == self.UNSHUFFLE)
 
 	def previousSong(self):
-		self.tableWidget.selectPreviousRow()
+		self.tableWidget.selectPreviousRow(self.shuffleState == self.UNSHUFFLE)
 
 	def shuffle(self):
 		self.shuffleState = self.SHUFFLE
-		self.shuffleButton.setIcon(QtGui.QIcon("ui/icon/shuffle.png"))
+		self.shuffleButton.setIcon(QtGui.QIcon("ui/icon/unshuffle.png"))
+		self.shuffleButton.setToolTip("Switch shuffle off")
 
 	def unshuffle(self):
 		self.shuffleState = self.UNSHUFFLE
-		self.shuffleButton.setIcon(QtGui.QIcon("ui/icon/unshuffle.png"))
+		self.shuffleButton.setIcon(QtGui.QIcon("ui/icon/shuffle.png"))
+		self.shuffleButton.setToolTip("Switch shuffle on")
 
 	def handleRemoveFileButton(self):
 		filesCount = self.tableWidget.checkedRowsCount()
