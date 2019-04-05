@@ -786,7 +786,7 @@
           <property name="minimumSize">
            <size>
             <width>200</width>
-            <height>312</height>
+            <height>280</height>
            </size>
           </property>
           <property name="font">
@@ -804,7 +804,7 @@
            <property name="geometry">
             <rect>
              <x>20</x>
-             <y>40</y>
+             <y>80</y>
              <width>151</width>
              <height>31</height>
             </rect>
@@ -820,7 +820,7 @@
            <property name="geometry">
             <rect>
              <x>20</x>
-             <y>80</y>
+             <y>120</y>
              <width>151</width>
              <height>31</height>
             </rect>
@@ -833,7 +833,7 @@
            <property name="geometry">
             <rect>
              <x>20</x>
-             <y>120</y>
+             <y>160</y>
              <width>151</width>
              <height>31</height>
             </rect>
@@ -846,7 +846,7 @@
            <property name="geometry">
             <rect>
              <x>20</x>
-             <y>160</y>
+             <y>40</y>
              <width>151</width>
              <height>31</height>
             </rect>
@@ -856,19 +856,6 @@
            </property>
            <property name="shortcut">
             <string>Ctrl+S</string>
-           </property>
-          </widget>
-          <widget class="QPushButton" name="autoTagButton">
-           <property name="geometry">
-            <rect>
-             <x>20</x>
-             <y>200</y>
-             <width>151</width>
-             <height>31</height>
-            </rect>
-           </property>
-           <property name="text">
-            <string>Otagovat automaticky</string>
            </property>
           </widget>
           <widget class="QLabel" name="label_10">
@@ -908,30 +895,17 @@
             <string>0</string>
            </property>
           </widget>
-          <widget class="QPushButton" name="nameAutoButton">
+          <widget class="QPushButton" name="groupEditButton">
            <property name="geometry">
             <rect>
              <x>20</x>
-             <y>240</y>
+             <y>200</y>
              <width>151</width>
              <height>31</height>
             </rect>
            </property>
            <property name="text">
-            <string>Pojmenovat auto</string>
-           </property>
-          </widget>
-          <widget class="QPushButton" name="groupRenameButton">
-           <property name="geometry">
-            <rect>
-             <x>20</x>
-             <y>280</y>
-             <width>151</width>
-             <height>31</height>
-            </rect>
-           </property>
-           <property name="text">
-            <string>Hromadné úpravy</string>
+            <string>Upravit vybrané</string>
            </property>
           </widget>
          </widget>

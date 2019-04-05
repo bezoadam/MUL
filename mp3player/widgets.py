@@ -478,9 +478,7 @@ class MP3Player(QtWidgets.QMainWindow):
 		self.deleteCoverButton.clicked.connect(self.handleDeleteCoverButton)
 		self.renameFileButton.clicked.connect(self.handleRenameFileButton)
 		self.saveChangesButton.clicked.connect(self.handleSaveChangesButton)
-		self.autoTagButton.clicked.connect(self.handleAutoTagButton)
-		self.nameAutoButton.clicked.connect(self.handleNameAutoButton)
-		self.groupRenameButton.clicked.connect(self.handleGroupRenameButton)
+		self.groupEditButton.clicked.connect(self.handleGroupEditButton)
 		self.playButton.clicked.connect(self.handlePlayButton)
 		self.stopButton.clicked.connect(self.handleStopButton)
 		self.nextButton.clicked.connect(self.handleNextButton)
@@ -495,6 +493,11 @@ class MP3Player(QtWidgets.QMainWindow):
 		QtWidgets.QShortcut(Qt.Qt.Key_Left, self, self.previousSong)
 		QtWidgets.QShortcut(Qt.Qt.Key_Down, self, self.nextSong)
 		QtWidgets.QShortcut(Qt.Qt.Key_Up, self, self.previousSong)
+		QtWidgets.QShortcut(Qt.Qt.Key_Space, self, self.togglePlayPause)
+		QtWidgets.QShortcut(Qt.Qt.Key_Escape, self, self.focusOut)
+
+	def focusOut(self):
+		self.setFocus(Qt.Qt.OtherFocusReason)
 
 	def closeEvent(self, event):
 		self.closed = True
@@ -537,29 +540,36 @@ class MP3Player(QtWidgets.QMainWindow):
 
 	def reloadMP3File(self, mp3file):
 		if mp3file is not None:
+			# Load media file to vlc media and if it should be playing and it is not playing, hit play
 			self.media = self.vlcInstance.media_new(mp3file.path)
 			self.vlcPlayer.set_media(self.media)
 			if self.playState == self.PLAYING and not self.vlcPlayer.is_playing():
 				self.vlcPlayer.play()
 
+			# Update correct informations
 			self.songBitRateLabel.setText(str(self.mp3file.songBitrate))
 			self.updateTimes(currentSeconds=0, songLength=self.mp3file.songLength)
 
+			# Fill the tags into the lineEdits and reload CoverImage
 			self.fillTags(self.mp3file)
 			self.mp3file.reloadCoverImage()
 			self.redrawCoverImage()
 		else:
+			# If there's no file, we should definitely stop and clear media file
 			self.stop()
 			self.media = None
 
+			# Remove informations and set times to zeros
 			self.songBitRateLabel.setText("N/A")
 			self.updateTimes(currentSeconds=0, songLength=0)
 
+			# Clear tags and reload cover image (it will be empty)
 			self.clearTags()
-			self.mp3file.reloadCoverImage()
 			self.redrawCoverImage()
 
 	def updatingPlayerState(self):
+		if self.vlcPlayer.is_playing():
+			print("Přehrávač hraje: {}".format(self.vlcPlayer.get_time()))
 		if self.playState == self.PLAYING or self.playState == self.PAUSED:
 			songTime = int(self.vlcPlayer.get_time() * 0.001)
 			self.updateTimes(currentSeconds=songTime)
@@ -663,6 +673,12 @@ class MP3Player(QtWidgets.QMainWindow):
 		self.volume, self.previousVolume = self.previousVolume, self.volume
 		self.updateVolume(self.volume)
 
+	def togglePlayPause(self):
+		if self.playState == self.PLAYING:
+			self.pause()
+		else:
+			self.play()
+
 	def play(self):
 		self.playState = self.PLAYING
 		self.playButton.setIcon(QtGui.QIcon("ui/icon/pause.png"))
@@ -710,8 +726,10 @@ class MP3Player(QtWidgets.QMainWindow):
 
 			if reply == QtWidgets.QMessageBox.Yes:
 				self.tableWidget.removeCheckedMP3Files()
+		else:
+			QtWidgets.QMessageBox.warning(self, "Nevybrané žádné soubory", "Nebyly vybrány žádné soubory pro odstranění.")
 
-		if self.tableWidget.rowCount() == 0:
+		if self.tableWidget.rowCount() == 0 or self.playState == self.PLAYING:
 			self.stop()
 
 	def handleDeleteCoverButton(self):
@@ -723,9 +741,14 @@ class MP3Player(QtWidgets.QMainWindow):
 				self.mp3file.removeCoverImage()
 				self.coverLine.setText("")
 				self.redrawCoverImage()
+		else:
+			QtWidgets.QMessageBox.warning(self, "Fotka alba neexistuje", "Fotku alba nelze odstranit, protože neexistuje.")
 
 	def handleRenameFileButton(self):
-		print("handleRenameFileButton")
+		if self.tableWidget.checkedRowsCount() > 0:
+			print("handleRenameFileButton")
+		else:
+			QtWidgets.QMessageBox.warning(self, "Nevybrané žádné soubory", "Nebyly vybrány žádné soubory pro přejmenování.")
 
 	def saveTags(self):
 		# Check tricky parts
@@ -751,21 +774,21 @@ class MP3Player(QtWidgets.QMainWindow):
 					self.mp3file.saveTag(key, self.__getattribute__(key + "Line").text())
 
 	def handleSaveChangesButton(self):
-		try:
-			self.saveTags()
-			self.redrawCoverImage()
-		# TODO handle errors with dialogs
-		except Exception as e:
-			print("EXCEPTION occured: {}".format(e))
+		if self.mp3file is not None:
+			try:
+				self.saveTags()
+				self.redrawCoverImage()
+			# TODO handle errors with dialogs
+			except Exception as e:
+				print("EXCEPTION occured: {}".format(e))
+		else:
+			QtWidgets.QMessageBox.warning(self, "Není načtený soubor", "Nebyl načten žádný hudební soubor, nelze uložit změny.")
 
-	def handleAutoTagButton(self):
-		print("handleAutoTagButton")
-
-	def handleNameAutoButton(self):
-		print("handleNameAutoButton")
-
-	def handleGroupRenameButton(self):
-		print("handleGroupRenameButton")
+	def handleGroupEditButton(self):
+		if self.tableWidget.checkedRowsCount() > 0:
+			print("handleGroupEditButton")
+		else:
+			QtWidgets.QMessageBox.warning(self, "Nevybrané žádné soubory", "Nebyly vybrány žádné soubory pro hromadné přejmenování.")
 
 	def handlePlayButton(self):
 		if self.playState == self.PLAYING:
