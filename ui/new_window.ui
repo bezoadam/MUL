@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1029</width>
+    <width>991</width>
     <height>773</height>
    </rect>
   </property>
@@ -270,7 +270,7 @@
               <string/>
              </property>
             </widget>
-            <widget class="QLineEdit" name="imagePathLine">
+            <widget class="QLineEdit" name="coverLine">
              <property name="geometry">
               <rect>
                <x>120</x>
@@ -299,7 +299,7 @@
               <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
              </property>
             </widget>
-            <widget class="QToolButton" name="toolButton_2">
+            <widget class="QToolButton" name="chooseImageButton">
              <property name="geometry">
               <rect>
                <x>290</x>
@@ -364,7 +364,7 @@
             <height>350</height>
            </size>
           </property>
-          <widget class="QGraphicsView" name="albumImageGraphicView">
+          <widget class="QGraphicsView" name="coverImageGraphicView">
            <property name="geometry">
             <rect>
              <x>0</x>
@@ -378,7 +378,7 @@
            <property name="geometry">
             <rect>
              <x>10</x>
-             <y>270</y>
+             <y>280</y>
              <width>58</width>
              <height>18</height>
             </rect>
@@ -391,7 +391,7 @@
            <property name="geometry">
             <rect>
              <x>10</x>
-             <y>300</y>
+             <y>310</y>
              <width>58</width>
              <height>18</height>
             </rect>
@@ -403,27 +403,75 @@
           <widget class="QLabel" name="songBitRateLabel">
            <property name="geometry">
             <rect>
-             <x>90</x>
-             <y>270</y>
-             <width>161</width>
+             <x>70</x>
+             <y>280</y>
+             <width>181</width>
              <height>18</height>
             </rect>
+           </property>
+           <property name="font">
+            <font>
+             <family>Noto Sans</family>
+             <pointsize>9</pointsize>
+             <weight>50</weight>
+             <italic>true</italic>
+             <bold>false</bold>
+            </font>
            </property>
            <property name="text">
             <string>bitate_value</string>
            </property>
           </widget>
-          <widget class="QLabel" name="songLengthLabel">
+          <widget class="QLabel" name="songLengthStrLabel">
            <property name="geometry">
             <rect>
-             <x>90</x>
-             <y>300</y>
-             <width>161</width>
+             <x>70</x>
+             <y>310</y>
+             <width>181</width>
              <height>18</height>
             </rect>
            </property>
+           <property name="font">
+            <font>
+             <family>Noto Sans</family>
+             <pointsize>9</pointsize>
+             <weight>50</weight>
+             <italic>false</italic>
+             <bold>false</bold>
+            </font>
+           </property>
            <property name="text">
             <string>delka</string>
+           </property>
+          </widget>
+          <widget class="QLabel" name="labelImage">
+           <property name="geometry">
+            <rect>
+             <x>2</x>
+             <y>28</y>
+             <width>252</width>
+             <height>228</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+          <widget class="QToolButton" name="deleteCoverButton">
+           <property name="geometry">
+            <rect>
+             <x>220</x>
+             <y>220</y>
+             <width>31</width>
+             <height>31</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset>
+             <normaloff>icon/delete.png</normaloff>icon/delete.png</iconset>
            </property>
           </widget>
          </widget>
@@ -469,7 +517,12 @@
              <enum>QLayout::SetFixedSize</enum>
             </property>
             <item>
-             <widget class="QLabel" name="currentTimeLabel">
+             <widget class="QLabel" name="songCurrentTimeLabel">
+              <property name="font">
+               <font>
+                <family>Monospace</family>
+               </font>
+              </property>
               <property name="text">
                <string>1:53</string>
               </property>
@@ -483,19 +536,27 @@
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="songLenghtLabel">
+             <widget class="QLabel" name="songTimeLabel">
+              <property name="font">
+               <font>
+                <family>Monospace</family>
+               </font>
+              </property>
               <property name="text">
                <string>20:00</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QSlider" name="horizontalSlider_2">
+             <widget class="TimeSlider" name="timeSlider">
               <property name="maximum">
                <number>1200</number>
               </property>
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="tickPosition">
+               <enum>QSlider::NoTicks</enum>
               </property>
              </widget>
             </item>
@@ -526,7 +587,8 @@
               </property>
               <property name="icon">
                <iconset>
-                <normaloff>icon/play.png</normaloff>icon/play.png</iconset>
+                <normaloff>icon/play.png</normaloff>
+                <normalon>icon/pause.png</normalon>icon/play.png</iconset>
               </property>
              </widget>
             </item>
@@ -602,7 +664,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QSlider" name="volumeSlider">
+             <widget class="VolumeSlider" name="volumeSlider">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -654,7 +716,7 @@
       <item row="2" column="0">
        <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
-         <widget class="QTableWidget" name="tableWidget">
+         <widget class="MP3Table" name="tableWidget">
           <property name="editTriggers">
            <set>QAbstractItemView::NoEditTriggers</set>
           </property>
@@ -674,7 +736,7 @@
            <bool>true</bool>
           </property>
           <property name="selectionMode">
-           <enum>QAbstractItemView::MultiSelection</enum>
+           <enum>QAbstractItemView::SingleSelection</enum>
           </property>
           <property name="selectionBehavior">
            <enum>QAbstractItemView::SelectRows</enum>
@@ -683,16 +745,25 @@
            <enum>Qt::DashLine</enum>
           </property>
           <property name="sortingEnabled">
-           <bool>true</bool>
+           <bool>false</bool>
+          </property>
+          <property name="wordWrap">
+           <bool>false</bool>
           </property>
           <property name="cornerButtonEnabled">
            <bool>true</bool>
           </property>
           <property name="columnCount">
-           <number>8</number>
+           <number>1</number>
           </property>
           <attribute name="horizontalHeaderCascadingSectionResizes">
            <bool>false</bool>
+          </attribute>
+          <attribute name="horizontalHeaderDefaultSectionSize">
+           <number>100</number>
+          </attribute>
+          <attribute name="horizontalHeaderMinimumSectionSize">
+           <number>20</number>
           </attribute>
           <attribute name="verticalHeaderCascadingSectionResizes">
            <bool>false</bool>
@@ -703,76 +774,11 @@
           <attribute name="verticalHeaderStretchLastSection">
            <bool>false</bool>
           </attribute>
-          <row>
-           <property name="text">
-            <string>1</string>
-           </property>
-          </row>
-          <row>
-           <property name="text">
-            <string>2</string>
-           </property>
-          </row>
-          <row>
-           <property name="text">
-            <string>3</string>
-           </property>
-          </row>
           <column>
            <property name="text">
-            <string>Název souboru</string>
+            <string>Test</string>
            </property>
           </column>
-          <column>
-           <property name="text">
-            <string>Název skladby</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Umělec</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Album</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Žánr</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Rok</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Stopa</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Obrázek alba</string>
-           </property>
-          </column>
-          <item row="0" column="0">
-           <property name="text">
-            <string>test</string>
-           </property>
-          </item>
-          <item row="1" column="0">
-           <property name="text">
-            <string>asdf</string>
-           </property>
-          </item>
-          <item row="2" column="0">
-           <property name="text">
-            <string>gerte</string>
-           </property>
-          </item>
          </widget>
         </item>
         <item>
@@ -894,6 +900,7 @@
            </property>
            <property name="font">
             <font>
+             <family>Monospace</family>
              <pointsize>13</pointsize>
             </font>
            </property>
@@ -940,7 +947,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1029</width>
+     <width>991</width>
      <height>30</height>
     </rect>
    </property>
@@ -976,6 +983,23 @@
    </property>
   </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>MP3Table</class>
+   <extends>QTableWidget</extends>
+   <header>mp3player.widgets</header>
+  </customwidget>
+  <customwidget>
+   <class>TimeSlider</class>
+   <extends>QSlider</extends>
+   <header>mp3player.widgets</header>
+  </customwidget>
+  <customwidget>
+   <class>VolumeSlider</class>
+   <extends>QSlider</extends>
+   <header>mp3player.widgets</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
