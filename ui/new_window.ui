@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>991</width>
-    <height>773</height>
+    <height>739</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -367,10 +367,10 @@
           <widget class="QGraphicsView" name="coverImageGraphicView">
            <property name="geometry">
             <rect>
-             <x>0</x>
-             <y>27</y>
-             <width>256</width>
-             <height>231</height>
+             <x>6</x>
+             <y>28</y>
+             <width>245</width>
+             <height>245</height>
             </rect>
            </property>
           </widget>
@@ -447,10 +447,10 @@
           <widget class="QLabel" name="labelImage">
            <property name="geometry">
             <rect>
-             <x>2</x>
+             <x>6</x>
              <y>28</y>
-             <width>252</width>
-             <height>228</height>
+             <width>245</width>
+             <height>245</height>
             </rect>
            </property>
            <property name="text">
@@ -460,8 +460,8 @@
           <widget class="QToolButton" name="deleteCoverButton">
            <property name="geometry">
             <rect>
-             <x>220</x>
-             <y>220</y>
+             <x>214</x>
+             <y>240</y>
              <width>31</width>
              <height>31</height>
             </rect>
@@ -965,23 +965,6 @@
    <addaction name="menuControls"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <widget class="QToolBar" name="toolBar">
-   <property name="windowTitle">
-    <string>toolBar</string>
-   </property>
-   <attribute name="toolBarArea">
-    <enum>TopToolBarArea</enum>
-   </attribute>
-   <attribute name="toolBarBreak">
-    <bool>false</bool>
-   </attribute>
-   <addaction name="actiongroupRename"/>
-  </widget>
-  <action name="actiongroupRename">
-   <property name="text">
-    <string>grRename</string>
-   </property>
-  </action>
  </widget>
  <customwidgets>
   <customwidget>

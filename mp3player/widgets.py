@@ -231,8 +231,11 @@ class MP3Table(QtWidgets.QTableWidget):
 		self.mainWindow = mainWindow
 		self.createHeaders()
 		self.horizontalHeader().sectionClicked.connect(self.handleHeaderClicked)
+		self.horizontalHeader().sortIndicatorChanged.connect(self.handleSort)
 		self.cellClicked.connect(self.handleCellClick)
 		self.lastSelectedRow = None
+		self.lastOrderedColumn = None
+		self.lastOrder = None
 		self.checkedRows: List = list()
 
 	def isEmpty(self):
@@ -255,7 +258,19 @@ class MP3Table(QtWidgets.QTableWidget):
 
 			self.selectRow()
 
-	def selectRow(self):
+	def handleSort(self, logicalIndex, eSort):
+		if logicalIndex != 0:
+			self.horizontalHeader().setSortIndicator(logicalIndex, eSort)
+
+			rows = [i.topRow() for i in self.selectedRanges() if i.rightColumn() - i.leftColumn() > 0]
+			if len(rows) == 1 and self.lastSelectedRow is not None:
+				self.selectRow(rows[0])
+
+		# QtWidgets.QHeaderView.set
+		# self.horizontalHeader().setSortIndicator(0, self.model().sortOrder())
+
+	def selectRow(self, row=None):
+		self.lastSelectedRow = self.lastSelectedRow if row is None else row
 		self.setRangeSelected(QtWidgets.QTableWidgetSelectionRange(0, 0, self.rowCount() - 1, self.columnCount() - 1), False)
 		if self.lastSelectedRow is not None:
 			self.setRangeSelected(QtWidgets.QTableWidgetSelectionRange(self.lastSelectedRow, 0, self.lastSelectedRow, self.columnCount() - 1), True)
@@ -361,16 +376,35 @@ class MP3Table(QtWidgets.QTableWidget):
 			if key != "cover":
 				self.setItem(rowCount, idx + 1, mp3file.getAttr(key))
 
-	def handleHeaderClicked(self, headerIdx):
-		if headerIdx == 0:
-			if self.checkedRowsCount() == self.rowCount():
-				for i in range(self.rowCount()):
-					self.unCheckRow(i)
-			else:
-				for i in range(self.rowCount()):
-					self.checkRow(i)
+	def reorderItems(self):
+		if self.lastOrderedColumn is None or self.lastOrder is None:
+			self.horizontalHeader().setSortIndicatorShown(False)
 		else:
-			pass
+			self.horizontalHeader().setSortIndicatorShown(True)
+			self.horizontalHeader().setSortIndicator(self.lastOrderedColumn, self.lastOrder)
+			self.sortItems(self.lastOrderedColumn, order=self.lastOrder)
+
+	def sortItems(self, column, order=Qt.Qt.AscendingOrder):
+		self.lastOrderedColumn = column
+		self.lastOrder = order
+		super().sortItems(column, order=order)
+
+	def handleHeaderClicked(self, column):
+		# If checkbox is clicked
+		if column == 0:
+			if self.checkedRowsCount() == self.rowCount():
+				self.unCheckAllRows()
+			else:
+				self.checkAllRows()
+			self.reorderItems()
+		else:
+			self.horizontalHeader().setSortIndicatorShown(True)
+			if self.horizontalHeader().sortIndicatorOrder() == Qt.Qt.AscendingOrder:
+				self.horizontalHeader().setSortIndicator(column, Qt.Qt.AscendingOrder)
+				self.sortItems(column, order=Qt.Qt.AscendingOrder)
+			else:
+				self.horizontalHeader().setSortIndicator(column, Qt.Qt.DescendingOrder)
+				self.sortItems(column, order=Qt.Qt.DescendingOrder)
 
 
 class MP3Player(QtWidgets.QMainWindow):
