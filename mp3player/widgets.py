@@ -14,55 +14,152 @@ import vlc
 
 
 class JumpSlider(QtWidgets.QSlider):
+	'''Custom Slider class for click->jump behaviour
+
+	Arguments:
+
+		QtWidgets {QSlider} -- Base class
+	'''
+
 	def __init__(self, *args):
 		QtWidgets.QSlider.__init__(self, *args)
 
 	def mousePressEvent(self, e):
+		'''Handle mouse press event
+
+		Arguments:
+
+			e {QtGui.QMouseEvent} -- event
+		'''
 		self.handleEvent(e)
 
 	def mouseMoveEvent(self, e):
+		'''Handle mouse move event
+
+		Arguments:
+
+			e {QtGui.QMouseEvent} -- event
+		'''
 		self.handleEvent(e)
 
 	def mouseReleaseEvent(self, e):
+		'''Handle mouse release event
+
+		Arguments:
+
+			e {QtGui.QMouseEvent} -- event
+		'''
 		self.handleEvent(e)
 
 	def handleEvent(self, e):
+		'''Base function for handling occured mouse events
+
+		Arguments:
+
+			e {QtGui.QMouseEvent} -- event
+		'''
 		self.setSliderPosition(int(self.minimum() + ((self.maximum() - self.minimum()) * e.x()) / float(self.width())))
 
 	def handleValueChanged(self, x):
-		self.mainWindow.updateVolumeFromSlider()
+		'''Handler for slider value changed
+
+		Arguments:
+
+			x {int} -- New value of slider
+		'''
+		raise NotImplementedError()
 
 	def setup(self, mainWindow):
+		'''Setup function for connecting parent widgets with child widgets
+
+		Arguments:
+
+			mainWindow {QtWidgets.QMainWindow} -- Main window of whole application
+		'''
 		self.mainWindow = mainWindow
 		self.valueChanged.connect(self.handleValueChanged)
 
 
 class VolumeSlider(JumpSlider):
+	'''VolumeSlider class for customized slider handling volume of player
+
+	Arguments:
+
+		JumpSlider {JumpSlider} -- Base class of slider
+	'''
 	def __init__(self, *args):
 		super(JumpSlider, self).__init__(*args)
 
 	def handleValueChanged(self, x):
+		'''Handler for slider value changed
+
+		Arguments:
+
+			x {int} -- New value of slider
+		'''
 		self.mainWindow.updateVolumeFromSlider()
 
 
 class TimeSlider(JumpSlider):
+	'''TimeSlider class for customized slider handling current time of played song
+
+	Arguments:
+
+		JumpSlider {JumpSlider} -- Base class of slider
+	'''
 	def __init__(self, *args):
 		super(JumpSlider, self).__init__(*args)
 
 	def handleValueChanged(self, x):
+		'''Handler for slider value changed
+
+		Arguments:
+
+			x {int} -- New value of slider
+		'''
 		self.mainWindow.updateTimeFromSlider()
 
 
 class MP3Tag(QtWidgets.QTableWidgetItem):
+	'''Custom QTableWidgetItem class for containing tag information
+
+	Arguments:
+
+		QtWidgets {QTableWidgetItem} -- Base class for MP3Tag
+	'''
+
 	def __init__(self, mp3file, tagIdentifier, text):
+		'''Initializer for MP3Tag class
+
+		It saves the parent class (MP3File class)
+
+		Arguments:
+
+			mp3file {MP3File} -- Wrapper class for wrapping all tags of MP3File
+			tagIdentifier {str} -- Tag identifier (from mutagen library)
+			text {str} -- Value of the widget item
+		'''
 		super(QtWidgets.QTableWidgetItem, self).__init__(text)
 		self.mp3file = mp3file
 
 	def getMP3File(self):
+		'''Getter for mp3file
+
+		Returns:
+
+			MP3File -- parent MP3 file
+		'''
 		return self.mp3file
 
 
 class MP3File(object):
+	'''Wrapper class for wrapping all tags of MP3File and handling savings and loading (it's abstract for a row in TableWidget)
+
+	Arguments:
+
+		object {object} -- Base class
+	'''
+
 	property_2_name: OrderedDict = OrderedDict({
 		"fileName": "Soubor",  # Not tag, just for general usage
 		"songName": "Jméno písně",
@@ -77,6 +174,12 @@ class MP3File(object):
 	coverExtensions = ["jpg", "jpeg", "gif", "png"]
 
 	def __init__(self, path):
+		'''Initializer for MP3File class
+
+		Arguments:
+
+			path {str} -- path to MP3 file
+		'''
 		super(object, self).__init__()
 
 		self.path = path
@@ -106,13 +209,19 @@ class MP3File(object):
 			"APIC": "cover",
 		})
 
-		self.initColumns()
+		# Create tags and set empty strings as its value
+		self.initProperties()
 
-		self.reloadTagsFromFile()
+		# Load Tags from file
+		self.fillTagsFromFile()
 
-	def reloadCoverImage(self):
+	def loadCoverImageFromFile(self):
+		'''Method is loading cover image (QPixmap) to `image` property from file (by path)
+		'''
+		# Remove image
 		self.image = None
 
+		# Reload image from file
 		audio = MP3(self.path, ID3=ID3)
 		for key in audio.keys():
 			for tag in self.tag_2_property:
@@ -121,13 +230,21 @@ class MP3File(object):
 						self.loadCoverImageFromBytes(audio.tags.get(key).data)
 
 	def loadCoverImageFromBytes(self, bytes):
+		'''Method is loading cover image (QPixmap) from bytes
+
+		Arguments:
+
+			bytes {BytesIO} -- Bytes containing image (loaded from file or from tags data, or whatever)
+		'''
 		self.imageBytes = bytes
 		self.image = QtGui.QPixmap.fromImage(QtGui.QImage.fromData(self.imageBytes))
 
-	def removeCoverImage(self):
+	def removeCoverImageFromFile(self):
+		'''Removes cover image from mp3file
+		'''
 		audio = MP3(self.path, ID3=ID3)
 		keys = list(audio.keys())
-		for key in reversed(keys):
+		for key in keys:
 			if "APIC" in key:
 				audio.pop(key, None)
 		audio.save(v2_version=4)
@@ -135,66 +252,119 @@ class MP3File(object):
 		self.imageBytes = None
 		self.image = None
 
-	def reloadTagsFromFile(self):
+	def fillTagsFromFile(self):
+		'''Fill tags from file
+
+		It's loading tags from mutagen library and saving it to MP3Tag class (which are this class properties accessed by __getattribute__)
+		'''
+		# Set correct filename (individual because it's not a tag)
 		self.fileName.setText(self.baseName)
 
+		# Load whole file
 		audio = MP3(self.path, ID3=ID3)
 
+		# Set correctly all tags
 		for key in audio.keys():
 			for tag in self.tag_2_property:
 				if tag in key:
 					if tag == "APIC":
 						self.loadCoverImageFromBytes(audio.tags.get(key).data)
 					else:
-						self.getAttr(self.tag_2_property[tag]).setText(str(audio.tags[key].text[0]))
+						self.__getattribute__(self.tag_2_property[tag]).setText(str(audio.tags[key].text[0]))
 
+		# Set other informations which are not editable using this editor
 		self.songLength = int(audio.info.length)
 		self.songBitrate = audio.info.bitrate
 
 		del audio
 
-	def saveTag(self, propertyName, propertyValue):
+	def saveTagToFile(self, propertyName, propertyValue):
+		'''Save individual tag to file using property name and property value
+
+		Arguments:
+
+			propertyName {[type]} -- [description]
+			propertyValue {[type]} -- [description]
+		'''
+		# TODO add validation (And proper raising)
+		# If it's fileName, process it differently
 		if propertyName == "fileName":
 			self.rename(propertyValue)
+		# If it's cover image, process it also differently
 		elif propertyName == "cover":
 			self.saveCover(propertyValue)
+		# Other tags can be processed commonly
 		else:
 			audio = MP3(self.path, ID3=ID3)
 			tag = self.property_2_tag[propertyName]
-			audio[tag] = getattr(mutagen.id3, tag)(encoding=3, text=propertyValue)
+
+			# If the tag is empty, remove existing tag or don't create an empty tag
+			if propertyValue == "":
+				if tag in audio:
+					audio.pop(tag)
+			else:
+				audio[tag] = getattr(mutagen.id3, tag)(encoding=3, text=propertyValue)
+
+			# Save it
 			audio.save(v2_version=4)
 			del audio
 
-		self.getAttr(propertyName).setText(str(propertyValue))
+		# Finally make sure that the change is also fastforwarded to Text
+		self.__getattribute__(propertyName).setText(str(propertyValue))
 
-	def initColumns(self):
+	def initProperties(self):
+		'''Initialization of all tags and images
+		'''
 		self.imageBytes = None
 		self.image = None
 		for key in self.property_2_tag:
-			self.setAttr(key, MP3Tag(self, key, ""))
+			self.__setattr__(key, MP3Tag(self, key, ""))
 
-	def getAttr(self, attrName):
-		return self.__getattribute__(attrName)
+	def canRenameFilename(self, newPath):
+		'''Check if the new name of the file can be set (check existing files and empty strings)
 
-	def setAttr(self, attrName, value):
-		self.__setattr__(attrName, value)
+		Arguments:
 
-	def canRename(self, newPath):
-		return not os.path.exists(os.path.join(self.baseDir, newPath)) or newPath == self.baseName
+			newPath {str} -- New base name of a file
+
+		Returns:
+
+			bool -- True if can be renamed and False if can not
+		'''
+		return (not os.path.exists(os.path.join(self.baseDir, newPath)) or newPath == self.baseName) and newPath != ""
 
 	def rename(self, newPath):
+		'''Rename mp3 file
+
+		Arguments:
+
+			newPath {str} -- New base name of a file
+		'''
 		if newPath != self.baseName:
 			os.renames(os.path.join(self.baseDir, self.baseName), os.path.join(self.baseDir, newPath))
 			self.baseName = newPath
 			self.path = os.path.join(self.baseDir, self.baseName)
 
 	def hasCover(self):
-		for key in self.tag_2_property:
+		'''Method checks if file has a cover
+
+		Returns:
+
+			bool -- True if file has a cover, False if doesn't
+		'''
+		audio = MP3(self.path, ID3=ID3)
+		for key in audio.keys():
 			if "APIC" in key:
 				return True
 		return False
 
 	def saveCover(self, coverPath):
+		'''Save cover image to file
+
+		Arguments:
+
+			coverPath {str} -- Path to cover image
+		'''
 		# Init audio
 		audio = MP3(self.path, ID3=ID3)
 
@@ -205,13 +375,13 @@ class MP3File(object):
 				if "APIC" in key:
 					audio.pop(key, None)
 
+		# Change mime type and load and save image
 		if coverPath != "":
 			extension = coverPath.split(".")[-1].lower()
 			if extension == "jpg":
-				extension = "jpg"
+				extension = "jpeg"
 			mime = "image/" + extension
 
-		if coverPath != "":
 			with open(coverPath, "rb") as coverFile:
 				img = coverFile.read()
 				audio['APIC'] = APIC(
@@ -226,142 +396,271 @@ class MP3File(object):
 
 
 class MP3Table(QtWidgets.QTableWidget):
+	'''Custom QTableWidget wrapping mp3 file
+
+	Arguments:
+
+		QtWidgets {QTableWidget} -- Base class
+
+	Returns:
+
+		MP3Table -- instance of MP3Table
+	'''
 	HEADER_CHECK_EMPTY = "[_]"
 	HEADER_CHECK_CHECKED = "[X]"
 
 	def __init__(self, *args):
+		'''Initializer of MP3Table
+		'''
 		super(QtWidgets.QTableWidget, self).__init__(*args)
 
 	def setup(self, mainWindow):
+		'''Setup function for connecting parent widgets with child widgets
+
+		Arguments:
+
+			mainWindow {QtWidgets.QMainWindow} -- Main window of whole application
+		'''
+		# Init
 		self.mainWindow = mainWindow
 		self.createHeaders()
+
+		# Handlers
 		self.horizontalHeader().sectionClicked.connect(self.handleHeaderClicked)
-		self.horizontalHeader().sortIndicatorChanged.connect(self.handleSort)
 		self.cellClicked.connect(self.handleCellClick)
+
+		# Properties
 		self.lastSelectedRow = None
 		self.lastOrderedColumn = None
 		self.lastOrder = None
 		self.checkedRows: List = list()
 
 	def isEmpty(self):
+		'''Checks if table is empty
+
+		Returns:
+
+			bool -- True if empty, False if not
+		'''
 		return self.rowCount() == 0
 
 	def checkedRowsCount(self):
+		'''Number of checked rows in this table
+
+		Returns:
+
+			int -- Number of checked rows
+		'''
 		return len(self.checkedRows)
 
 	def getMP3File(self, row):
+		'''Get mp3 file wrapper from this table
+
+		Arguments:
+
+			row {int} -- Row to get a mp3 file
+
+		Returns:
+
+			MP3File -- MP3File
+		'''
 		return self.item(row, 1).mp3file
 
+	def getSelectedRowFromRanges(self):
+		'''Get selected row of TableWdiget using selected ranges
+
+		Returns:
+
+			int -- Row number
+		'''
+		rows = [i.topRow() for i in self.selectedRanges() if i.rightColumn() - i.leftColumn() > 0]
+		if len(rows) == 1:
+			return rows[0]
+		else:
+			return None
+
+	def activateRow(self, row):
+		'''Activate row of MP3Player
+
+		Arguments:
+
+			row {int} -- Row which should be activated
+		'''
+		self.lastSelectedRow = row
+		self.mainWindow.setMediaFileFromRow(self.lastSelectedRow)
+
 	def handleCellClick(self, row, col):
+		'''Handle cell click in the QTableWidget
+
+		Arguments:
+
+			row {int} -- Row of the clicked cell
+			col {int} -- Column of the clicked cell
+		'''
+		# If tag was clicked
 		if col > 0:
-			rows = [i.topRow() for i in self.selectedRanges() if i.rightColumn() - i.leftColumn() > 0]
-			if len(rows) == 1:
-				self.lastSelectedRow = rows[0]
-				self.mainWindow.handleRowClicked(self.lastSelectedRow)
+			selectedRow = self.getSelectedRowFromRanges()
+			if selectedRow is not None:
+				self.activateRow(selectedRow)
+		# If checkbox was clicked
 		if col == 0:
-			self.toggleRow(row)
+			self.toggleRowCheckBox(row)
 
-			self.selectRow()
+	def setRangeSelectionByRow(self, row=None):
+		'''Set RangeSelected according to the single row given (if not given set it by actual selected row)
 
-	def handleSort(self, logicalIndex, eSort):
-		if logicalIndex != 0:
-			self.horizontalHeader().setSortIndicator(logicalIndex, eSort)
+		Keyword Arguments:
 
-			rows = [i.topRow() for i in self.selectedRanges() if i.rightColumn() - i.leftColumn() > 0]
-			if len(rows) == 1 and self.lastSelectedRow is not None:
-				self.selectRow(rows[0])
-
-		# QtWidgets.QHeaderView.set
-		# self.horizontalHeader().setSortIndicator(0, self.model().sortOrder())
-
-	def selectRow(self, row=None):
-		self.lastSelectedRow = self.lastSelectedRow if row is None else row
+			row {int} -- Row number which range should be selected (default: {None})
+		'''
+		row = self.lastSelectedRow if row is None else row
 		self.setRangeSelected(QtWidgets.QTableWidgetSelectionRange(0, 0, self.rowCount() - 1, self.columnCount() - 1), False)
-		if self.lastSelectedRow is not None:
-			self.setRangeSelected(QtWidgets.QTableWidgetSelectionRange(self.lastSelectedRow, 0, self.lastSelectedRow, self.columnCount() - 1), True)
+		if row is not None:
+			self.setRangeSelected(QtWidgets.QTableWidgetSelectionRange(row, 0, row, self.columnCount() - 1), True)
 
-	def selectNextRow(self, deterministic_next=True):
+	def activateNextRow(self, deterministic=True):
+		'''Activate next row (mp3file)
+
+		Keyword Arguments:
+
+			deterministic {bool} -- Whether to shuffle or not (default: {True})
+		'''
+		# If MP3 player is not empty
 		if not self.isEmpty():
 			if self.lastSelectedRow is None:
-				self.lastSelectedRow = 0 if deterministic_next else random.randint(0, self.rowCount() - 1)
+				self.lastSelectedRow = 0 if deterministic else random.randint(0, self.rowCount() - 1)
 			else:
-				self.lastSelectedRow = (self.lastSelectedRow + 1) % self.rowCount() if deterministic_next else (self.lastSelectedRow + random.randint(0, self.rowCount() - 1)) % self.rowCount()
+				self.lastSelectedRow = (self.lastSelectedRow + 1) % self.rowCount() if deterministic else (self.lastSelectedRow + random.randint(0, self.rowCount() - 1)) % self.rowCount()
 
-			self.selectRow()
-			self.mainWindow.handleRowClicked(self.lastSelectedRow)
+			self.mainWindow.setMediaFileFromRow(self.lastSelectedRow)
 
-	def selectPreviousRow(self, deterministic_next=True):
+	def activatePreviousRow(self, deterministic=True):
+		'''Activate previous row (mp3file)
+
+		Keyword Arguments:
+
+			deterministic {bool} -- Whether to shuffle or not (default: {True})
+		'''
+		# If MP3 player is not empty
 		if not self.isEmpty():
 			if self.lastSelectedRow is None:
-				self.lastSelectedRow = 0 if deterministic_next else random.randint(0, self.rowCount() - 1)
+				self.lastSelectedRow = 0 if deterministic else random.randint(0, self.rowCount() - 1)
 			else:
-				self.lastSelectedRow = (self.lastSelectedRow - 1) % self.rowCount() if deterministic_next else (self.lastSelectedRow + random.randint(0, self.rowCount() - 1)) % self.rowCount()
+				self.lastSelectedRow = (self.lastSelectedRow - 1) % self.rowCount() if deterministic else (self.lastSelectedRow + random.randint(0, self.rowCount() - 1)) % self.rowCount()
 
-			self.selectRow()
-			self.mainWindow.handleRowClicked(self.lastSelectedRow)
+			self.mainWindow.setMediaFileFromRow(self.lastSelectedRow)
+
+	def getCheckBox(self, row):
+		'''Get Checkbox by row
+
+		Arguments:
+
+			row {int} -- Checkbox's row which we should get
+
+		Returns:
+
+			QtWidgets.QTableWidgetItem -- Checkbox
+		'''
+		return self.item(row, 0)
 
 	def unCheckRow(self, row):
-		item = self.item(row, 0)
+		'''Uncheck row
+
+		Arguments:
+
+			row {int} -- Which row should be unchecked
+		'''
+		item = self.getCheckBox(row)
 		if item in self.checkedRows:
 			self.checkedRows.remove(item)
 		item.setCheckState(Qt.Qt.Unchecked)
 
 		self.updateCheckHeader()
-		self.mainWindow.updateFilesPickedLabel()
+		self.mainWindow.updateFilesCheckedLabel()
 
 	def checkRow(self, row):
-		item = self.item(row, 0)
+		'''Check row
+
+		Arguments:
+
+			row {int} -- Which row should be checked
+		'''
+		item = self.getCheckBox(row)
 		if item not in self.checkedRows:
 			self.checkedRows.append(item)
 		item.setCheckState(Qt.Qt.Checked)
 
 		self.updateCheckHeader()
-		self.mainWindow.updateFilesPickedLabel()
+		self.mainWindow.updateFilesCheckedLabel()
 
-	def toggleRow(self, row):
-		item = self.item(row, 0)
+	def toggleRowCheckBox(self, row):
+		'''Toggle check on the item specified by row
+
+		Arguments:
+
+			row {int} -- Checkbox's row
+		'''
+		item = self.getCheckBox(row)
 		if item not in self.checkedRows:
 			self.checkRow(row)
 		else:
 			self.unCheckRow(row)
 
-		self.updateCheckHeader()
-
 	def checkAllRows(self):
+		'''Check all rows
+		'''
 		for i in range(self.rowCount()):
 			self.checkRow(i)
 
 	def unCheckAllRows(self):
+		'''Uncheck all rowy
+		'''
 		for i in range(self.rowCount()):
 			self.unCheckRow(i)
 
 	def removeCheckedMP3Files(self):
+		'''Remove checked mp3 files (checked rows)
+		'''
 		for item in sorted(self.checkedRows, key=lambda x: x.row(), reverse=True):
 			self.removeMP3(item.row())
 
 	def removeMP3(self, row):
-		# TODO make it better
+		'''Remove mp3 file (row from table)
+
+		Arguments:
+
+			row {int} -- Row index
+		'''
+		# Check if the row is in the table
 		if row < self.rowCount():
-			if self.lastSelectedRow is not None and self.lastSelectedRow == row:
-				if self.rowCount() == 1:
-					self.lastSelectedRow = None
-				elif self.rowCount() - 1 <= row:
-					self.lastSelectedRow -= 1
-				self.unCheckRow(row)
-				self.removeRow(row)
-				self.selectRow()
-				self.mainWindow.handleRowClicked(self.lastSelectedRow)
-			else:
-				self.unCheckRow(row)
-				self.removeRow(row)
+			self.unCheckRow(row)
+			self.removeRow(row)
+
+			# If the table will be empty
+			if self.isEmpty():
+				self.lastSelectedRow = None
+				self.mainWindow.setMediaFileFromRow(self.lastSelectedRow)
+
+			# If removed row was before selected row decrease index
+			elif self.lastSelectedRow is not None and self.lastSelectedRow > row:
+				self.lastSelectedRow -= 1
+
+			# If removed row was selected row decrease index and reload media file
+			elif self.lastSelectedRow is not None and self.lastSelectedRow == row:
+				self.lastSelectedRow -= 1
+				self.mainWindow.setMediaFileFromRow(self.lastSelectedRow)
 
 	def updateCheckHeader(self):
+		'''Update checkbox header
+		'''
 		if self.checkedRowsCount() == self.rowCount():
 			self.horizontalHeaderItem(0).setText(self.HEADER_CHECK_CHECKED)
 		else:
 			self.horizontalHeaderItem(0).setText(self.HEADER_CHECK_EMPTY)
 
 	def createHeaders(self):
+		'''Create headers of table
+		'''
 		header_labels = [self.HEADER_CHECK_EMPTY] + [j for (i, j) in MP3File.property_2_name.items() if i != "cover"]
 		self.setColumnCount(len(header_labels))
 		self.setHorizontalHeaderLabels(header_labels)
@@ -370,18 +669,31 @@ class MP3Table(QtWidgets.QTableWidget):
 		self.setColumnWidth(0, 20)
 
 	def addMP3(self, mp3file):
+		'''Add MP3 file to table
+
+		Arguments:
+
+			mp3file {MP3File} -- MP3File object which should be inserted to table
+		'''
+		# Get current number of rows and insert new row
 		rowCount = self.rowCount()
 		self.insertRow(rowCount)
+
+		# Create checkbox item and insert it
 		checkBoxHeader = QtWidgets.QTableWidgetItem()
 		checkBoxHeader.setFlags(Qt.Qt.ItemIsUserCheckable | Qt.Qt.ItemIsEnabled)
 		checkBoxHeader.setCheckState(Qt.Qt.Unchecked)
 		checkBoxHeader.setTextAlignment(Qt.Qt.AlignCenter)
 		self.setItem(rowCount, 0, checkBoxHeader)
+
+		# insert all other tags to table
 		for idx, key in enumerate(mp3file.property_2_tag):
 			if key != "cover":
-				self.setItem(rowCount, idx + 1, mp3file.getAttr(key))
+				self.setItem(rowCount, idx + 1, mp3file.__getattribute__(key))
 
-	def reorderItems(self):
+	def reorderItemsByLastOrder(self):
+		'''Reorder items in the table again by using last order
+		'''
 		if self.lastOrderedColumn is None or self.lastOrder is None:
 			self.horizontalHeader().setSortIndicatorShown(False)
 		else:
@@ -390,18 +702,39 @@ class MP3Table(QtWidgets.QTableWidget):
 			self.sortItems(self.lastOrderedColumn, order=self.lastOrder)
 
 	def sortItems(self, column, order=Qt.Qt.AscendingOrder):
+		'''Overriden method of sortItems for saving last ordered column and order type, also for managing select range and index of actual media
+
+		Arguments:
+
+			column {int} -- Column by which it should be order
+
+		Keyword Arguments:
+
+			order {Qt.Qt.QOrder} -- Order type (default: {Qt.Qt.AscendingOrder})
+		'''
 		self.lastOrderedColumn = column
 		self.lastOrder = order
+
 		super().sortItems(column, order=order)
 
+		row = self.getSelectedRowFromRanges()
+		if row is not None:
+			self.lastSelectedRow = row
+
 	def handleHeaderClicked(self, column):
+		'''Handle header clicked (checkbox vs. sorting)
+
+		Arguments:
+
+			column {int} -- Header index clicked
+		'''
 		# If checkbox is clicked
 		if column == 0:
 			if self.checkedRowsCount() == self.rowCount():
 				self.unCheckAllRows()
 			else:
 				self.checkAllRows()
-			self.reorderItems()
+			self.reorderItemsByLastOrder()
 		else:
 			self.horizontalHeader().setSortIndicatorShown(True)
 			if self.horizontalHeader().sortIndicatorOrder() == Qt.Qt.AscendingOrder:
@@ -413,6 +746,25 @@ class MP3Table(QtWidgets.QTableWidget):
 
 
 class MP3Player(QtWidgets.QMainWindow):
+	'''QMainWindow containing mp3 player
+
+	Arguments:
+
+		QtWidgets {QMainWindow} -- Base class
+
+	Raises:
+
+		TypeError -- [description]
+		TypeError -- [description]
+		FileExistsError -- [description]
+		FileNotFoundError -- [description]
+		FileNotFoundError -- [description]
+		NameError -- [description]
+
+	Returns:
+
+		[type] -- [description]
+	'''
 	# Play state
 	PLAYING = 0
 	STOPPED = 1
@@ -427,20 +779,72 @@ class MP3Player(QtWidgets.QMainWindow):
 	UNMUTE = 1
 
 	def __init__(self):
-		self.app = QtWidgets.QApplication([])
+		'''Initializer
+		'''
 		super(QtWidgets.QMainWindow, self).__init__()
 
+		# Load UI
 		uiFile = "ui/new_window.ui"
 		with open(uiFile) as f:
 			uic.loadUi(f, self)
 
+		# Init all properties
 		self.propertyInit()
 
+		# Connect all signals to handlers
 		self.setupHandlers()
 
+		# Setup custom widgets
 		self.setupCustomWidgets()
 
+	def isPlaying(self):
+		'''If mp3 player should be playing
+
+		Returns:
+
+			bool -- True if playing, False if not
+		'''
+		return self.playState == self.PLAYING
+
+	def isStoped(self):
+		'''If mp3 player should be stopped
+
+		Returns:
+
+			bool -- True if stopped, False if not
+		'''
+		return self.playState == self.STOPPED
+
+	def isPaused(self):
+		'''If mp3 player should be paused
+
+		Returns:
+
+			bool -- True if paused, False if not
+		'''
+		return self.playState == self.PAUSED
+
+	def isShuffleOn(self):
+		'''If shuffle is turned on
+
+		Returns:
+
+			bool -- True if yes, False if no
+		'''
+		return self.shuffleState == self.SHUFFLE
+
+	def isMuted(self):
+		'''If volume is muted
+
+		Returns:
+
+			bool -- True if yes, False if no
+		'''
+		return self.muteState == self.MUTE
+
 	def propertyInit(self):
+		'''Property initializer
+		'''
 		# Window state
 		self.closed = False
 
@@ -464,15 +868,19 @@ class MP3Player(QtWidgets.QMainWindow):
 		self.previousVolume = 100
 		self.currentSeconds = 0
 		self.songLength = 0
-		self.updateVolume(self.volume)
+		self.updateVolume(100)
 		self.updateTimes(self.currentSeconds, self.songLength)
 
 	def setupCustomWidgets(self):
+		'''Setup custom widgets (linking parent object to them)
+		'''
 		self.tableWidget.setup(self)
 		self.timeSlider.setup(self)
 		self.volumeSlider.setup(self)
 
 	def setupHandlers(self):
+		'''Setup handlers to the signals and shortcuts also
+		'''
 		self.openFileButton.clicked.connect(self.handleOpenFileButton)
 		self.chooseImageButton.clicked.connect(self.handleChooseImageButton)
 		self.removeFileButton.clicked.connect(self.handleRemoveFileButton)
@@ -498,28 +906,50 @@ class MP3Player(QtWidgets.QMainWindow):
 		QtWidgets.QShortcut(Qt.Qt.Key_Escape, self, self.focusOut)
 
 	def focusOut(self):
+		'''Focus out (for example from line edits)
+		'''
 		self.setFocus(Qt.Qt.OtherFocusReason)
 
 	def closeEvent(self, event):
+		'''If the window is closing, just memorize it happend
+
+		Arguments:
+
+			event {[type]} -- [description]
+		'''
 		self.closed = True
 		event.accept()
 
 	def handleSelectAll(self):
+		'''Handle select all
+		'''
 		self.tableWidget.checkAllRows()
 
 	def handleUnSelectAll(self):
+		'''Handle unselect all
+		'''
 		self.tableWidget.unCheckAllRows()
 
-	def clearTags(self):
+	def clearLineEdits(self):
+		'''Clear line edits
+		'''
 		self.labelImage.hide()
 		for key in MP3File.property_2_name:
 			self.__getattribute__(key + "Line").setText("")
 
-	def fillTags(self, mp3file):
+	def fillLineEdits(self, mp3file):
+		'''Fill line edits from mp3 file
+
+		Arguments:
+
+			mp3file {MP3File} -- MP3File
+		'''
 		for key in mp3file.property_2_tag:
-			self.__getattribute__(key + "Line").setText(mp3file.getAttr(key).text())
+			self.__getattribute__(key + "Line").setText(mp3file.__getattribute__(key).text())
 
 	def redrawCoverImage(self):
+		'''Redraw cover image
+		'''
 		if self.mp3file is not None and self.mp3file.image is not None:
 			img = self.mp3file.image
 			if (img.width() / img.height()) > (self.labelImage.width() / self.labelImage.height()):
@@ -531,20 +961,33 @@ class MP3Player(QtWidgets.QMainWindow):
 		else:
 			self.labelImage.hide()
 
-	def handleRowClicked(self, row):
+	def setMediaFileFromRow(self, row):
+		'''Set media file from row from tableWidget
+
+		Arguments:
+
+			row {int} -- Row index
+		'''
 		if row is None:
 			self.mp3file = None
 		else:
 			self.mp3file = self.tableWidget.getMP3File(row)
 
-		self.reloadMP3File(self.mp3file)
+		self.setMediaFileFromMP3File(self.mp3file)
+		self.tableWidget.setRangeSelectionByRow(row)
 
-	def reloadMP3File(self, mp3file):
+	def setMediaFileFromMP3File(self, mp3file):
+		'''Reload MP3File and if player should be playing, play
+
+		Arguments:
+
+			mp3file {MP3File} -- MP3File to be played
+		'''
 		if mp3file is not None:
-			# Load media file to vlc media and if it should be playing and it is not playing, hit play
+			# Load media file to vlc media and if it should be playing and it is not, hit play
 			self.media = self.vlcInstance.media_new(mp3file.path)
 			self.vlcPlayer.set_media(self.media)
-			if self.playState == self.PLAYING and not self.vlcPlayer.is_playing():
+			if self.isPlaying() and not self.vlcPlayer.is_playing():
 				self.vlcPlayer.play()
 
 			# Update correct informations
@@ -552,8 +995,8 @@ class MP3Player(QtWidgets.QMainWindow):
 			self.updateTimes(currentSeconds=0, songLength=self.mp3file.songLength)
 
 			# Fill the tags into the lineEdits and reload CoverImage
-			self.fillTags(self.mp3file)
-			self.mp3file.reloadCoverImage()
+			self.fillLineEdits(self.mp3file)
+			self.mp3file.loadCoverImageFromFile()
 			self.redrawCoverImage()
 		else:
 			# If there's no file, we should definitely stop and clear media file
@@ -565,22 +1008,25 @@ class MP3Player(QtWidgets.QMainWindow):
 			self.updateTimes(currentSeconds=0, songLength=0)
 
 			# Clear tags and reload cover image (it will be empty)
-			self.clearTags()
+			self.clearLineEdits()
 			self.redrawCoverImage()
 
 	def updatingPlayerState(self):
-		if self.playState == self.PLAYING or self.playState == self.PAUSED:
+		'''Update mp3 player state periodically
+		'''
+		if self.isPlaying() or self.isPaused():
 			songTime = int(self.vlcPlayer.get_time() * 0.001)
 			self.updateTimes(currentSeconds=songTime)
 
-		if self.playState == self.PLAYING and self.vlcPlayer.get_time() >= self.songLength * 1000:
-			print("Song ended, trying to play next song")
+		if self.isPlaying() and self.vlcPlayer.get_time() >= self.songLength * 1000:
 			self.nextSong()
 
 		if not self.closed:
 			threading.Timer(0.2, self.updatingPlayerState).start()
 
 	def handleChooseImageButton(self):
+		'''Handle choose image button, select path and redraw cover image
+		'''
 		path = QtWidgets.QFileDialog.getOpenFileName(self, "Select image cover", filter="images ({})".format(" ".join(["*." + i for i in MP3File.coverExtensions])))[0]
 		if path != "":
 			self.coverLine.setText(path)
@@ -589,12 +1035,29 @@ class MP3Player(QtWidgets.QMainWindow):
 			self.redrawCoverImage()
 
 	def handleOpenFileButton(self):
+		'''Handle open file button, create mp3 file and add it to table
+		'''
 		paths = QtWidgets.QFileDialog.getOpenFileNames(self, "Select MP3 files", filter="mp3(*.mp3)")[0]
 		for path in paths:
 			mp3file = MP3File(path)
 			self.tableWidget.addMP3(mp3file)
 
 	def convertSecsToString(self, secs, hours_digits=0, long_format=False):
+		'''Convert seconds to human readable format
+
+		Arguments:
+
+			secs {int} -- Seconds
+
+		Keyword Arguments:
+
+			hours_digits {int} -- How many hour digits to zfill (default: {0})
+			long_format {bool} -- If long format is triggered (default: {False})
+
+		Returns:
+
+			str -- string time format
+		'''
 		hours = secs // 3600
 		mins = (secs % 3600) // 60
 		secs = secs % 60
@@ -614,16 +1077,34 @@ class MP3Player(QtWidgets.QMainWindow):
 			hours_digits = int(math.ceil(math.log10(hours)))
 			return "{} hours {} mins {} secs".format(str(hours), str(mins), str(secs))
 
-	def updateFilesPickedLabel(self):
+	def updateFilesCheckedLabel(self):
+		'''Update how many files are checked
+		'''
 		self.filesPickedLabel.setText(str(self.tableWidget.checkedRowsCount()))
 
 	def updateTimeFromSlider(self):
+		'''Update current time progress of song from slider
+		'''
 		self.songTimeLabel.setText(self.convertSecsToString(self.timeSlider.maximum()))
 		self.songCurrentTimeLabel.setText(self.convertSecsToString(self.timeSlider.sliderPosition()))
 		self.songLengthStrLabel.setText(self.convertSecsToString(self.timeSlider.maximum(), long_format=True))
 		self.updateTimes(int(self.timeSlider.sliderPosition()), int(self.timeSlider.maximum()), recurse=False)
 
 	def updateTimes(self, currentSeconds=None, songLength=None, recurse=True):
+		'''Update song times, it triggers changes of sliders if recurse is set to true
+
+		Keyword Arguments:
+
+			currentSeconds {int} -- Current seconds progress of song (default: {None})
+			songLength {int} -- Song length (default: {None})
+			recurse {bool} -- If it should trigger change of slider (default: {True})
+
+		Raises:
+
+			TypeError -- [description]
+			TypeError -- [description]
+		'''
+
 		if currentSeconds is not None and not isinstance(currentSeconds, int):
 			raise TypeError("currentSeconds must be integer")
 
@@ -636,10 +1117,10 @@ class MP3Player(QtWidgets.QMainWindow):
 		if songLength is not None and self.songLength != songLength:
 			self.songLength = songLength
 
+		self.songCurrentTimeLabel.setText(self.convertSecsToString(self.currentSeconds))
+		self.songTimeLabel.setText(self.convertSecsToString(self.songLength))
+		self.songLengthStrLabel.setText(self.convertSecsToString(self.songLength, long_format=True))
 		if recurse:
-			self.songCurrentTimeLabel.setText(self.convertSecsToString(self.currentSeconds))
-			self.songTimeLabel.setText(self.convertSecsToString(self.songLength))
-			self.songLengthStrLabel.setText(self.convertSecsToString(self.songLength, long_format=True))
 			self.timeSlider.setSliderPosition(self.currentSeconds)
 			self.timeSlider.setMaximum(self.songLength)
 
@@ -647,9 +1128,22 @@ class MP3Player(QtWidgets.QMainWindow):
 			self.vlcPlayer.set_time(self.currentSeconds * 1000)
 
 	def updateVolumeFromSlider(self):
+		'''Update volume from actual slider position
+		'''
 		self.updateVolume(int(self.volumeSlider.sliderPosition()), recurse=False)
 
 	def updateVolume(self, volume, recurse=True):
+		'''Update volume of the player
+
+		Arguments:
+
+			volume {int} -- Volume value
+
+		Keyword Arguments:
+
+			recurse {bool} -- If it should trigger change of slider (default: {True})
+		'''
+
 		self.volume = volume
 		if self.volume > 0:
 			self.muteState = self.UNMUTE
@@ -666,21 +1160,29 @@ class MP3Player(QtWidgets.QMainWindow):
 		self.vlcPlayer.audio_set_volume(self.volume)
 
 	def mute(self):
+		'''Mute player
+		'''
 		self.previousVolume = self.volume
 		self.volume = 0
 		self.updateVolume(0)
 
 	def unmute(self):
+		'''Unmute player
+		'''
 		self.volume, self.previousVolume = self.previousVolume, self.volume
 		self.updateVolume(self.volume)
 
 	def togglePlayPause(self):
-		if self.playState == self.PLAYING:
+		'''Toggle play or pause
+		'''
+		if self.isPlaying():
 			self.pause()
 		else:
 			self.play()
 
 	def play(self):
+		'''Play the song
+		'''
 		self.playState = self.PLAYING
 		self.playButton.setIcon(QtGui.QIcon("ui/icon/pause.png"))
 		self.playButton.setToolTip("Pause")
@@ -688,6 +1190,8 @@ class MP3Player(QtWidgets.QMainWindow):
 		self.vlcPlayer.play()
 
 	def stop(self):
+		'''Stop the song
+		'''
 		self.playState = self.STOPPED
 		self.playButton.setIcon(QtGui.QIcon("ui/icon/play.png"))
 		self.stopButton.setToolTip("Stop")
@@ -696,6 +1200,8 @@ class MP3Player(QtWidgets.QMainWindow):
 		self.vlcPlayer.stop()
 
 	def pause(self):
+		'''Pause the song
+		'''
 		self.playState = self.PAUSED
 		self.playButton.setIcon(QtGui.QIcon("ui/icon/play.png"))
 		self.playButton.setToolTip("Play")
@@ -703,22 +1209,32 @@ class MP3Player(QtWidgets.QMainWindow):
 		self.vlcPlayer.pause()
 
 	def nextSong(self):
-		self.tableWidget.selectNextRow(self.shuffleState == self.UNSHUFFLE)
+		'''Play next song
+		'''
+		self.tableWidget.activateNextRow(self.shuffleState == self.UNSHUFFLE)
 
 	def previousSong(self):
-		self.tableWidget.selectPreviousRow(self.shuffleState == self.UNSHUFFLE)
+		'''Play previous song
+		'''
+		self.tableWidget.activatePreviousRow(self.shuffleState == self.UNSHUFFLE)
 
 	def shuffle(self):
+		'''Set shuffle on
+		'''
 		self.shuffleState = self.SHUFFLE
 		self.shuffleButton.setIcon(QtGui.QIcon("ui/icon/unshuffle.png"))
 		self.shuffleButton.setToolTip("Switch shuffle off")
 
 	def unshuffle(self):
+		'''Set shuffle off
+		'''
 		self.shuffleState = self.UNSHUFFLE
 		self.shuffleButton.setIcon(QtGui.QIcon("ui/icon/shuffle.png"))
 		self.shuffleButton.setToolTip("Switch shuffle on")
 
 	def handleRemoveFileButton(self):
+		'''Handle remove file button
+		'''
 		filesCount = self.tableWidget.checkedRowsCount()
 		if filesCount > 0:
 			if filesCount == 1:
@@ -735,97 +1251,125 @@ class MP3Player(QtWidgets.QMainWindow):
 		else:
 			QtWidgets.QMessageBox.warning(self, "Nevybrané žádné soubory", "Nebyly vybrány žádné soubory pro odstranění.")
 
-		if self.tableWidget.rowCount() == 0 or self.playState == self.PLAYING:
+		if self.tableWidget.rowCount() == 0 or self.isPlaying():
 			self.stop()
 
 	def handleDeleteCoverButton(self):
+		'''Handle delete cover album button
+		'''
 		if self.mp3file is not None and self.mp3file.image is not None:
 			msg = "Opravdu chcete odstranit fotku alba?"
 			reply = QtWidgets.QMessageBox.question(self, 'Message', msg, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
 
 			if reply == QtWidgets.QMessageBox.Yes:
-				self.mp3file.removeCoverImage()
+				self.mp3file.removeCoverImageFromFile()
 				self.coverLine.setText("")
 				self.redrawCoverImage()
 		else:
 			QtWidgets.QMessageBox.warning(self, "Fotka alba neexistuje", "Fotku alba nelze odstranit, protože neexistuje.")
 
 	def handleRenameFileButton(self):
+		'''Handle rename file button
+		'''
 		if self.tableWidget.checkedRowsCount() > 0:
 			print("handleRenameFileButton")
 		else:
 			QtWidgets.QMessageBox.warning(self, "Nevybrané žádné soubory", "Nebyly vybrány žádné soubory pro přejmenování.")
 
 	def saveTags(self):
+		'''Save tags from lineEdits
+
+		Raises:
+
+			FileExistsError -- Cannot rename file
+			FileNotFoundError -- Cover file wasn't found
+			NameError -- Image is in wrong format
+		'''
 		# Check tricky parts
-		if not self.mp3file.canRename(self.fileNameLine.text()):
+		if not self.mp3file.canRenameFilename(self.fileNameLine.text()):
 			raise FileExistsError("Cannot rename file because file already exists!")
-		if self.fileNameLine.text() == "":
-			raise FileNotFoundError("The file name cannot be empty!")
 		if self.coverLine.text() != "" and not os.path.exists(self.coverLine.text()):
 			raise FileNotFoundError("The album image doesnt exists!")
 		if self.coverLine.text() != "" and self.coverLine.text().split(".")[-1] not in MP3File.coverExtensions:
 			raise NameError("Image is in wrong format")
 
 		# Rename file if needed
-		self.mp3file.saveTag("fileName", self.fileNameLine.text())
+		self.mp3file.saveTagToFile("fileName", self.fileNameLine.text())
 
 		# Set album name
-		self.mp3file.saveTag("cover", self.coverLine.text())
+		self.mp3file.saveTagToFile("cover", self.coverLine.text())
 
 		# Save all other tags
 		if self.mp3file is not None:
 			for key, value in self.mp3file.property_2_tag.items():
 				if value not in ["APIC", "PATH"]:
-					self.mp3file.saveTag(key, self.__getattribute__(key + "Line").text())
+					self.mp3file.saveTagToFile(key, self.__getattribute__(key + "Line").text())
 
 	def handleSaveChangesButton(self):
+		'''Handle save changes button
+		'''
 		if self.mp3file is not None:
 			try:
 				self.saveTags()
 				self.redrawCoverImage()
-			# TODO handle errors with dialogs
-			except Exception as e:
-				print("EXCEPTION occured: {}".format(e))
+			except FileExistsError:
+				QtWidgets.QMessageBox.warning(self, "NNelze přejmenovat soubor", "Nelze přejmenovat soubor, soubor již existuje, nebo byl zadán prázdný řetězec.")
+			except FileNotFoundError:
+				QtWidgets.QMessageBox.warning(self, "Obrázek alba nenalazen", "Obrázek alba neexistuje.")
+			except NameError:
+				QtWidgets.QMessageBox.warning(self, "Špatný formát obrázku", "Špatný formát vstupního obrázku alba.")
+			except Exception:
+				QtWidgets.QMessageBox.warning(self, "Nelze uložit data", "Vyskytla se chyba při ukládání")
+			QtWidgets.QMessageBox.information(self, "Uložení proběhlo úspěšně", "Uloženi informací o souboru proběhlo úspěšně.")
 		else:
 			QtWidgets.QMessageBox.warning(self, "Není načtený soubor", "Nebyl načten žádný hudební soubor, nelze uložit změny.")
 
 	def handleGroupEditButton(self):
+		'''Handle group edit button
+		'''
 		if self.tableWidget.checkedRowsCount() > 0:
 			print("handleGroupEditButton")
 		else:
 			QtWidgets.QMessageBox.warning(self, "Nevybrané žádné soubory", "Nebyly vybrány žádné soubory pro hromadné přejmenování.")
 
 	def handlePlayButton(self):
-		if self.playState == self.PLAYING:
+		'''Handle play button
+		'''
+		if self.isPlaying():
 			self.pause()
 
-		elif self.playState == self.PAUSED or self.playState == self.STOPPED:
+		elif self.isPaused() or self.isStoped():
 			self.play()
 
 	def handleStopButton(self):
+		'''Handle stop button
+		'''
 		self.stop()
 
 	def handleNextButton(self):
+		'''Handle next song button
+		'''
 		self.nextSong()
 
 	def handlePreviousButton(self):
+		'''Handle previous song button
+		'''
 		self.previousSong()
 
 	def handleShuffleButton(self):
-		if self.shuffleState == self.SHUFFLE:
+		'''Handle shuffle button
+		'''
+		if self.isShuffleOn():
 			self.unshuffle()
 
-		elif self.shuffleState == self.UNSHUFFLE:
+		elif not self.isShuffleOn():
 			self.shuffle()
 
 	def handleMuteButton(self):
-		if self.muteState == self.MUTE:
+		'''Handle mute button
+		'''
+		if self.isMuted():
 			self.unmute()
 
-		elif self.muteState == self.UNMUTE:
+		elif not self.isMuted():
 			self.mute()
-
-	def run(self):
-		self.show()
-		return self.app.exec()
