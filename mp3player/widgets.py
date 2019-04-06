@@ -8,7 +8,7 @@ import random
 
 import mutagen
 from mutagen.mp3 import MP3
-from mutagen.id3 import ID3, TPE1, TIT2, TRCK, TALB, APIC, TORY, TCON, COMM
+from mutagen.id3 import ID3, TPE1, TIT2, TRCK, TALB, APIC, TDRC, TCON, COMM
 from PyQt5 import QtWidgets, uic, Qt, QtGui
 import vlc
 
@@ -88,7 +88,7 @@ class MP3File(object):
 			"artist": "TPE1",
 			"album": "TALB",
 			"track": "TRCK",
-			"year": "TORY",
+			"year": "TDRC",
 			"genre": "TCON",
 			"comment": "COMM",
 			"cover": "APIC",
@@ -100,7 +100,7 @@ class MP3File(object):
 			"TPE1": "artist",
 			"TALB": "album",
 			"TRCK": "track",
-			"TORY": "year",
+			"TDRC": "year",
 			"TCON": "genre",
 			"COMM": "comment",
 			"APIC": "cover",
@@ -130,7 +130,7 @@ class MP3File(object):
 		for key in reversed(keys):
 			if "APIC" in key:
 				audio.pop(key, None)
-		audio.save()
+		audio.save(v2_version=4)
 		del audio
 		self.imageBytes = None
 		self.image = None
@@ -146,7 +146,7 @@ class MP3File(object):
 					if tag == "APIC":
 						self.loadCoverImageFromBytes(audio.tags.get(key).data)
 					else:
-						self.getAttr(self.tag_2_property[tag]).setText(str(audio[tag].text[0]))
+						self.getAttr(self.tag_2_property[tag]).setText(str(audio.tags[key].text[0]))
 
 		self.songLength = int(audio.info.length)
 		self.songBitrate = audio.info.bitrate
@@ -162,7 +162,7 @@ class MP3File(object):
 			audio = MP3(self.path, ID3=ID3)
 			tag = self.property_2_tag[propertyName]
 			audio[tag] = getattr(mutagen.id3, tag)(encoding=3, text=propertyValue)
-			audio.save()
+			audio.save(v2_version=4)
 			del audio
 
 		self.getAttr(propertyName).setText(str(propertyValue))
@@ -221,7 +221,7 @@ class MP3File(object):
 					data=img
 				)
 				self.loadCoverImageFromBytes(img)
-		audio.save()
+		audio.save(v2_version=4)
 		del audio
 
 
