@@ -1107,7 +1107,7 @@ class MP3Player(QtWidgets.QMainWindow):
 		'''
 		return self.playState == self.PLAYING
 
-	def isStoped(self):
+	def isStopped(self):
 		'''If mp3 player should be stopped
 
 		Returns:
@@ -1591,7 +1591,7 @@ class MP3Player(QtWidgets.QMainWindow):
 		if self.isPlaying():
 			self.pause()
 
-		elif self.isPaused() or self.isStoped():
+		elif self.isPaused() or self.isStopped():
 			self.play()
 
 	def handleStopButton(self):
