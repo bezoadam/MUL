@@ -120,6 +120,60 @@ class TimeSlider(JumpSlider):
 		self.mainWindow.updateTimeFromSlider()
 
 
+class TagDialog(QtWidgets.QDialog):
+	def __init__(self, *args):
+		'''Initializer
+		'''
+		super(QtWidgets.QDialog, self).__init__(*args)
+
+		# Load UI
+		uiFile = "ui/tag_dialog.ui"
+		with open(uiFile) as f:
+			uic.loadUi(f, self)
+
+	def clear(self):
+		self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
+		self.comboBox.setCurrentIndex(-1)
+
+	def handleCurrentIndexChanged(self, index):
+		if index < 0:
+			self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
+		else:
+			self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
+
+	def exec(self, *args, **kwargs):
+		self.clear()
+		return super().exec(*args, **kwargs)
+
+	def setup(self, mainWindow):
+		self.mainWindow = mainWindow
+		self.comboBox.currentIndexChanged.connect(self.handleCurrentIndexChanged)
+
+		self.properties = [i for (i, j) in MP3File.property_2_name.items() if i != "fileName"]
+		self.tags = [MP3File.property_2_tag[i] for i in self.properties]
+		self.items = [MP3File.property_2_name[i] for i in self.properties]
+
+		indices = sorted(range(len(self.items)), key=lambda x: self.items[x])
+
+		self.properties = [self.properties[i] for i in indices]
+		self.tags = [self.tags[i] for i in indices]
+		self.items = [self.items[i] for i in indices]
+
+		self.comboBox.addItems(self.items)
+
+	def getChoosedProperty(self):
+		if self.comboBox.currentIndex() >= 0:
+			return self.properties[self.comboBox.currentIndex()]
+
+	def getChoosedTag(self):
+		if self.comboBox.currentIndex() >= 0:
+			return self.tags[self.comboBox.currentIndex()]
+
+	def getChoosedItem(self):
+		if self.comboBox.currentIndex() >= 0:
+			return self.items[self.comboBox.currentIndex()]
+
+
 class MP3Tag(QtWidgets.QTableWidgetItem):
 	'''Custom QTableWidgetItem class for containing tag information
 
@@ -159,7 +213,6 @@ class MP3File(object):
 
 		object {object} -- Base class
 	'''
-
 	property_2_name: OrderedDict = OrderedDict({
 		"fileName": "Soubor",  # Not tag, just for general usage
 		"songName": "Jméno písně",
@@ -170,6 +223,29 @@ class MP3File(object):
 		"genre": "Žánr",
 		"comment": "Komentář",
 		"cover": "Obal",
+	})
+	property_2_tag: OrderedDict = OrderedDict({
+		"fileName": "PATH",  # Not tag, just for general usage
+		"songName": "TIT2",
+		"artist": "TPE1",
+		"album": "TALB",
+		"track": "TRCK",
+		"year": "TDRC",
+		"genre": "TCON",
+		"comment": "COMM",
+		"cover": "APIC",
+	})
+
+	tag_2_property: OrderedDict = OrderedDict({
+		"PATH": "fileName",  # Not tag, just for general usage
+		"TIT2": "songName",
+		"TPE1": "artist",
+		"TALB": "album",
+		"TRCK": "track",
+		"TDRC": "year",
+		"TCON": "genre",
+		"COMM": "comment",
+		"APIC": "cover",
 	})
 	coverExtensions = ["jpg", "jpeg", "gif", "png"]
 
@@ -185,29 +261,6 @@ class MP3File(object):
 		self.path = path
 		self.baseDir = os.path.dirname(self.path)
 		self.baseName = os.path.basename(self.path)
-		self.property_2_tag: OrderedDict = OrderedDict({
-			"fileName": "PATH",  # Not tag, just for general usage
-			"songName": "TIT2",
-			"artist": "TPE1",
-			"album": "TALB",
-			"track": "TRCK",
-			"year": "TDRC",
-			"genre": "TCON",
-			"comment": "COMM",
-			"cover": "APIC",
-		})
-
-		self.tag_2_property: OrderedDict = OrderedDict({
-			"PATH": "fileName",  # Not tag, just for general usage
-			"TIT2": "songName",
-			"TPE1": "artist",
-			"TALB": "album",
-			"TRCK": "track",
-			"TDRC": "year",
-			"TCON": "genre",
-			"COMM": "comment",
-			"APIC": "cover",
-		})
 
 		# Create tags and set empty strings as its value
 		self.initProperties()
@@ -618,6 +671,16 @@ class MP3Table(QtWidgets.QTableWidget):
 		for i in range(self.rowCount()):
 			self.unCheckRow(i)
 
+	def getCheckedMP3Files(self):
+		'''Get all checked mp3 files
+
+		Returns:
+
+			List[MP3File] -- List of MP3File
+		'''
+		mp3files = [self.getMP3File(i.row()) for i in self.checkedRows]
+		return mp3files
+
 	def removeCheckedMP3Files(self):
 		'''Remove checked mp3 files (checked rows)
 		'''
@@ -745,6 +808,179 @@ class MP3Table(QtWidgets.QTableWidget):
 				self.sortItems(column, order=Qt.Qt.DescendingOrder)
 
 
+class EditWindow(QtWidgets.QMainWindow):
+	def __init__(self, *args):
+		'''Initializer of SortTable
+		'''
+		'''Initializer
+		'''
+		super(QtWidgets.QMainWindow, self).__init__()
+
+		# Load UI
+		print("LOADING UI")
+		uiFile = "ui/group_edit.ui"
+		with open(uiFile) as f:
+			uic.loadUi(f, self)
+
+		print(self.imageLabel)
+		print(self.coverImageButton)
+
+	def setup(self, mainWindow):
+		'''Setup function for connecting parent widgets with child widgets
+
+		Arguments:
+
+			mainWindow {QtWidgets.QMainWindow} -- Main window of whole application
+		'''
+		# Init
+		self.mainWindow = mainWindow
+		self.setWindowModality(Qt.Qt.ApplicationModal)
+
+		# Connect
+		self.finishButton.clicked.connect(self.handleFinishButton)
+		self.cancelButton.clicked.connect(self.handleCancelButton)
+
+	def exec(self, property, data: List[MP3File]):
+		self.property = property
+		self.data = data
+
+		self.name = MP3File.property_2_name[self.property]
+		self.tag = MP3File.property_2_tag[self.property]
+		self.titleLabel.setText("Úprava položky: " + self.name)
+		self.init(self.tag)
+		self.mainWindow.setEnabled(False)
+		super().show()
+
+	def init(self, tag):
+		self.upButton.setEnabled(False)
+		self.downButton.setEnabled(False)
+		self.finishButton.setEnabled(False)
+		print(tag)
+		if tag == "APIC":
+			self.imageLabel.setVisible(True)
+			self.coverImageButton.setVisible(True)
+			self.valueLabel.setVisible(False)
+			self.valueBox.setVisible(False)
+			self.valueLine.setVisible(False)
+			self.valueAbrBox.setVisible(False)
+			self.valueRegularCheckbox.setVisible(False)
+			self.parseLabel.setVisible(False)
+			self.parseBox.setVisible(False)
+			self.parseLine.setVisible(False)
+			self.parseAbrBox.setVisible(False)
+			self.parseRegularCheckbox.setVisible(False)
+		elif tag == "autotag":
+			pass
+		else:
+			self.imageLabel.setVisible(False)
+			self.coverImageButton.setVisible(False)
+			pass
+
+		# Fill data to table
+		self.fillRows(self.data)
+
+	def closeEvent(self, event):
+		'''If the window is closing, just memorize it happend
+
+		Arguments:
+
+			event {[type]} -- [description]
+		'''
+		self.closed = True
+		self.mainWindow.setEnabled(True)
+		event.accept()
+
+	def handleFinishButton(self):
+		self.close()
+
+	def handleCancelButton(self):
+		self.close()
+
+	def fillRows(self, data):
+		pass
+
+
+class SortTable(QtWidgets.QTableWidget):
+	'''Custom SortTable for managing group editation
+
+	Arguments:
+
+		QtWidgets {QTableWidget} -- Base class
+
+	Returns:
+
+		SortTable -- instance of SortTable
+	'''
+
+	def __init__(self, *args):
+		'''Initializer of SortTable
+		'''
+		'''Initializer
+		'''
+		super(QtWidgets.QTableWidget, self).__init__()
+
+	def getMP3File(self, row):
+		'''Get mp3 file wrapper from this table
+
+		Arguments:
+
+			row {int} -- Row to get a mp3 file
+
+		Returns:
+
+			MP3File -- MP3File
+		'''
+		return self.data[row]
+
+	def getSelectedRowFromRanges(self):
+		'''Get selected row of TableWdiget using selected ranges
+
+		Returns:
+
+			int -- Row number
+		'''
+		rows = [i.topRow() for i in self.selectedRanges() if i.rightColumn() - i.leftColumn() > 0]
+		if len(rows) == 1:
+			return rows[0]
+		else:
+			return None
+
+	def fillRows(self, data):
+		pass
+
+	def addRow(self, mp3file):
+		'''Add MP3 file to table
+
+		Arguments:
+
+			mp3file {MP3File} -- MP3File object which should be inserted to table
+		'''
+		# Get current number of rows and insert new row
+		rowCount = self.rowCount()
+		self.insertRow(rowCount)
+
+		# Create checkbox item and insert it
+		checkBoxHeader = QtWidgets.QTableWidgetItem()
+		checkBoxHeader.setFlags(Qt.Qt.ItemIsUserCheckable | Qt.Qt.ItemIsEnabled)
+		checkBoxHeader.setCheckState(Qt.Qt.Unchecked)
+		checkBoxHeader.setTextAlignment(Qt.Qt.AlignCenter)
+		self.setItem(rowCount, 0, checkBoxHeader)
+
+		# insert all other tags to table
+		for idx, key in enumerate(mp3file.property_2_tag):
+			if key != "cover":
+				self.setItem(rowCount, idx + 1, mp3file.__getattribute__(key))
+
+	def moveRowUp(self, row):
+		pass
+
+	def moveRowDown(self, row):
+		pass
+
+	def refreshTable(self, row):
+		pass
+
+
 class MP3Player(QtWidgets.QMainWindow):
 	'''QMainWindow containing mp3 player
 
@@ -797,6 +1033,71 @@ class MP3Player(QtWidgets.QMainWindow):
 		# Setup custom widgets
 		self.setupCustomWidgets()
 
+	def setupCustomWidgets(self):
+		'''Setup custom widgets (linking parent object to them)
+		'''
+		self.tableWidget.setup(self)
+		self.timeSlider.setup(self)
+		self.volumeSlider.setup(self)
+		self.tagDialog.setup(self)
+		self.editWindow.setup(self)
+
+	def propertyInit(self):
+		'''Property initializer
+		'''
+		# Player states
+		self.playState = self.STOPPED
+		self.shuffleState = self.UNSHUFFLE
+		self.muteState = self.UNMUTE
+
+		# MP3file
+		self.mp3file = None
+
+		# VLC player
+		self.media = None
+		self.vlcInstance = vlc.Instance()
+		self.vlcPlayer = self.vlcInstance.media_player_new()
+		self.vlcPlayer.audio_set_volume(100)
+
+		# Init sliders
+		self.volume = 100
+		self.previousVolume = 100
+		self.currentSeconds = 0
+		self.songLength = 0
+		self.updateVolume(100)
+		self.updateTimes(self.currentSeconds, self.songLength)
+
+		# Dialogs and other managed windows
+		self.tagDialog = TagDialog(self)
+		self.editWindow = EditWindow(self)
+
+	def setupHandlers(self):
+		'''Setup handlers to the signals and shortcuts also
+		'''
+		self.openFileButton.clicked.connect(self.handleOpenFileButton)
+		self.chooseImageButton.clicked.connect(self.handleChooseImageButton)
+		self.removeFileButton.clicked.connect(self.handleRemoveFileButton)
+		self.deleteCoverButton.clicked.connect(self.handleDeleteCoverButton)
+		self.renameFileButton.clicked.connect(self.handleRenameFileButton)
+		self.saveChangesButton.clicked.connect(self.handleSaveChangesButton)
+		self.groupEditButton.clicked.connect(self.handleGroupEditButton)
+		self.playButton.clicked.connect(self.handlePlayButton)
+		self.stopButton.clicked.connect(self.handleStopButton)
+		self.nextButton.clicked.connect(self.handleNextButton)
+		self.previousButton.clicked.connect(self.handlePreviousButton)
+		self.shuffleButton.clicked.connect(self.handleShuffleButton)
+		self.muteButton.clicked.connect(self.handleMuteButton)
+		QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+A"), self).activated.connect(self.handleSelectAll)
+		QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+D"), self).activated.connect(self.handleUnSelectAll)
+		QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+O"), self).activated.connect(self.handleOpenFileButton)
+		QtWidgets.QShortcut(Qt.Qt.Key_Delete, self, self.handleRemoveFileButton)
+		QtWidgets.QShortcut(Qt.Qt.Key_Right, self, self.nextSong)
+		QtWidgets.QShortcut(Qt.Qt.Key_Left, self, self.previousSong)
+		QtWidgets.QShortcut(Qt.Qt.Key_Down, self, self.nextSong)
+		QtWidgets.QShortcut(Qt.Qt.Key_Up, self, self.previousSong)
+		QtWidgets.QShortcut(Qt.Qt.Key_Space, self, self.togglePlayPause)
+		QtWidgets.QShortcut(Qt.Qt.Key_Escape, self, self.focusOut)
+
 	def isPlaying(self):
 		'''If mp3 player should be playing
 
@@ -842,69 +1143,6 @@ class MP3Player(QtWidgets.QMainWindow):
 		'''
 		return self.muteState == self.MUTE
 
-	def propertyInit(self):
-		'''Property initializer
-		'''
-		# Window state
-		self.closed = False
-
-		# Player states
-		self.playState = self.STOPPED
-		self.shuffleState = self.UNSHUFFLE
-		self.muteState = self.UNMUTE
-
-		# MP3file
-		self.mp3file = None
-
-		# VLC player
-		self.media = None
-		self.vlcInstance = vlc.Instance()
-		self.vlcPlayer = self.vlcInstance.media_player_new()
-		self.vlcPlayer.audio_set_volume(100)
-		self.updatingPlayerState()
-
-		# Init sliders
-		self.volume = 100
-		self.previousVolume = 100
-		self.currentSeconds = 0
-		self.songLength = 0
-		self.updateVolume(100)
-		self.updateTimes(self.currentSeconds, self.songLength)
-
-	def setupCustomWidgets(self):
-		'''Setup custom widgets (linking parent object to them)
-		'''
-		self.tableWidget.setup(self)
-		self.timeSlider.setup(self)
-		self.volumeSlider.setup(self)
-
-	def setupHandlers(self):
-		'''Setup handlers to the signals and shortcuts also
-		'''
-		self.openFileButton.clicked.connect(self.handleOpenFileButton)
-		self.chooseImageButton.clicked.connect(self.handleChooseImageButton)
-		self.removeFileButton.clicked.connect(self.handleRemoveFileButton)
-		self.deleteCoverButton.clicked.connect(self.handleDeleteCoverButton)
-		self.renameFileButton.clicked.connect(self.handleRenameFileButton)
-		self.saveChangesButton.clicked.connect(self.handleSaveChangesButton)
-		self.groupEditButton.clicked.connect(self.handleGroupEditButton)
-		self.playButton.clicked.connect(self.handlePlayButton)
-		self.stopButton.clicked.connect(self.handleStopButton)
-		self.nextButton.clicked.connect(self.handleNextButton)
-		self.previousButton.clicked.connect(self.handlePreviousButton)
-		self.shuffleButton.clicked.connect(self.handleShuffleButton)
-		self.muteButton.clicked.connect(self.handleMuteButton)
-		QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+A"), self).activated.connect(self.handleSelectAll)
-		QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+D"), self).activated.connect(self.handleUnSelectAll)
-		QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+O"), self).activated.connect(self.handleOpenFileButton)
-		QtWidgets.QShortcut(Qt.Qt.Key_Delete, self, self.handleRemoveFileButton)
-		QtWidgets.QShortcut(Qt.Qt.Key_Right, self, self.nextSong)
-		QtWidgets.QShortcut(Qt.Qt.Key_Left, self, self.previousSong)
-		QtWidgets.QShortcut(Qt.Qt.Key_Down, self, self.nextSong)
-		QtWidgets.QShortcut(Qt.Qt.Key_Up, self, self.previousSong)
-		QtWidgets.QShortcut(Qt.Qt.Key_Space, self, self.togglePlayPause)
-		QtWidgets.QShortcut(Qt.Qt.Key_Escape, self, self.focusOut)
-
 	def focusOut(self):
 		'''Focus out (for example from line edits)
 		'''
@@ -919,6 +1157,20 @@ class MP3Player(QtWidgets.QMainWindow):
 		'''
 		self.closed = True
 		event.accept()
+
+	def setEnabled(self, enabled):
+		if not enabled and self.isPlaying():
+			self.pause()
+		super().setEnabled(enabled)
+
+	def show(self, *args, **kwargs):
+		'''Override show method for memorizing that self.closed
+		'''
+		# Window state
+		self.closed = False
+		self.updatingPlayerState()
+
+		super().show(*args, **kwargs)
 
 	def handleSelectAll(self):
 		'''Handle select all
@@ -1272,7 +1524,7 @@ class MP3Player(QtWidgets.QMainWindow):
 		'''Handle rename file button
 		'''
 		if self.tableWidget.checkedRowsCount() > 0:
-			print("handleRenameFileButton")
+			self.editWindow.exec("fileName", self.tableWidget.getCheckedMP3Files())
 		else:
 			QtWidgets.QMessageBox.warning(self, "Nevybrané žádné soubory", "Nebyly vybrány žádné soubory pro přejmenování.")
 
@@ -1328,7 +1580,8 @@ class MP3Player(QtWidgets.QMainWindow):
 		'''Handle group edit button
 		'''
 		if self.tableWidget.checkedRowsCount() > 0:
-			print("handleGroupEditButton")
+			if self.tagDialog.exec() > 0:
+				self.editWindow.exec(self.tagDialog.getChoosedProperty(), self.tableWidget.getCheckedMP3Files())
 		else:
 			QtWidgets.QMessageBox.warning(self, "Nevybrané žádné soubory", "Nebyly vybrány žádné soubory pro hromadné přejmenování.")
 

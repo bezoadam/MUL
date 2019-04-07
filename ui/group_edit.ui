@@ -1,0 +1,604 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>editWindow</class>
+ <widget class="QMainWindow" name="editWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>700</width>
+    <height>500</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>700</width>
+    <height>500</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QGridLayout" name="gridLayout_2">
+    <item row="1" column="0">
+     <layout class="QHBoxLayout" name="horizontalLayout_5">
+      <item>
+       <spacer name="horizontalSpacer_5">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="finishButton">
+        <property name="text">
+         <string>Finish</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="cancelButton">
+        <property name="text">
+         <string>Cancel</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_6">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </item>
+    <item row="0" column="0">
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="2" column="0">
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="SortTable" name="tableWidget">
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
+          </property>
+          <property name="tabKeyNavigation">
+           <bool>false</bool>
+          </property>
+          <property name="showDropIndicator" stdset="0">
+           <bool>false</bool>
+          </property>
+          <property name="dragEnabled">
+           <bool>false</bool>
+          </property>
+          <property name="dragDropOverwriteMode">
+           <bool>false</bool>
+          </property>
+          <property name="alternatingRowColors">
+           <bool>true</bool>
+          </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::SingleSelection</enum>
+          </property>
+          <property name="selectionBehavior">
+           <enum>QAbstractItemView::SelectRows</enum>
+          </property>
+          <property name="gridStyle">
+           <enum>Qt::DashLine</enum>
+          </property>
+          <property name="sortingEnabled">
+           <bool>false</bool>
+          </property>
+          <property name="wordWrap">
+           <bool>false</bool>
+          </property>
+          <property name="cornerButtonEnabled">
+           <bool>true</bool>
+          </property>
+          <property name="columnCount">
+           <number>2</number>
+          </property>
+          <attribute name="horizontalHeaderCascadingSectionResizes">
+           <bool>false</bool>
+          </attribute>
+          <attribute name="horizontalHeaderDefaultSectionSize">
+           <number>200</number>
+          </attribute>
+          <attribute name="horizontalHeaderMinimumSectionSize">
+           <number>200</number>
+          </attribute>
+          <attribute name="horizontalHeaderStretchLastSection">
+           <bool>true</bool>
+          </attribute>
+          <attribute name="verticalHeaderCascadingSectionResizes">
+           <bool>false</bool>
+          </attribute>
+          <attribute name="verticalHeaderShowSortIndicator" stdset="0">
+           <bool>true</bool>
+          </attribute>
+          <attribute name="verticalHeaderStretchLastSection">
+           <bool>false</bool>
+          </attribute>
+          <column>
+           <property name="text">
+            <string>Originální</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Přejmenované</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+        <item>
+         <widget class="QWidget" name="widget" native="true">
+          <property name="minimumSize">
+           <size>
+            <width>218</width>
+            <height>280</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <kerning>true</kerning>
+           </font>
+          </property>
+          <property name="mouseTracking">
+           <bool>true</bool>
+          </property>
+          <property name="accessibleDescription">
+           <string/>
+          </property>
+          <widget class="QPushButton" name="downButton">
+           <property name="geometry">
+            <rect>
+             <x>30</x>
+             <y>80</y>
+             <width>151</width>
+             <height>31</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>Down</string>
+           </property>
+           <property name="checkable">
+            <bool>false</bool>
+           </property>
+          </widget>
+          <widget class="QPushButton" name="upButton">
+           <property name="geometry">
+            <rect>
+             <x>30</x>
+             <y>40</y>
+             <width>151</width>
+             <height>31</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>Up</string>
+           </property>
+           <property name="shortcut">
+            <string>Ctrl+S</string>
+           </property>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="0" column="0">
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QLabel" name="titleLabel">
+          <property name="text">
+           <string>Úprava XXXXXXXX:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_2">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item row="1" column="0">
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <property name="sizeConstraint">
+         <enum>QLayout::SetMaximumSize</enum>
+        </property>
+        <item>
+         <layout class="QVBoxLayout" name="verticalLayout" stretch="0">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_8">
+            <property name="topMargin">
+             <number>18</number>
+            </property>
+            <item alignment="Qt::AlignVCenter">
+             <widget class="QStackedWidget" name="stackedWidget_2">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>170</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>170</height>
+               </size>
+              </property>
+              <property name="currentIndex">
+               <number>0</number>
+              </property>
+              <widget class="QWidget" name="stackedWidget_2Page1">
+               <widget class="QLabel" name="parseLabel">
+                <property name="geometry">
+                 <rect>
+                  <x>10</x>
+                  <y>45</y>
+                  <width>81</width>
+                  <height>18</height>
+                 </rect>
+                </property>
+                <property name="text">
+                 <string>Parsovat tag:</string>
+                </property>
+               </widget>
+               <widget class="QLabel" name="valueLabel">
+                <property name="geometry">
+                 <rect>
+                  <x>10</x>
+                  <y>104</y>
+                  <width>81</width>
+                  <height>18</height>
+                 </rect>
+                </property>
+                <property name="text">
+                 <string>Nový tag:</string>
+                </property>
+               </widget>
+               <widget class="QComboBox" name="parseBox">
+                <property name="geometry">
+                 <rect>
+                  <x>100</x>
+                  <y>40</y>
+                  <width>80</width>
+                  <height>32</height>
+                 </rect>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>80</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+               </widget>
+               <widget class="QComboBox" name="valueBox">
+                <property name="geometry">
+                 <rect>
+                  <x>100</x>
+                  <y>100</y>
+                  <width>80</width>
+                  <height>32</height>
+                 </rect>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>80</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <item>
+                 <property name="text">
+                  <string>Původní</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Malá písmena</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Velká písmena</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Kapitálky</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Vlastní</string>
+                 </property>
+                </item>
+               </widget>
+               <widget class="QLineEdit" name="parseLine">
+                <property name="geometry">
+                 <rect>
+                  <x>190</x>
+                  <y>40</y>
+                  <width>161</width>
+                  <height>32</height>
+                 </rect>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>161</width>
+                  <height>0</height>
+                 </size>
+                </property>
+               </widget>
+               <widget class="QLineEdit" name="valueLine">
+                <property name="geometry">
+                 <rect>
+                  <x>190</x>
+                  <y>100</y>
+                  <width>161</width>
+                  <height>32</height>
+                 </rect>
+                </property>
+               </widget>
+               <widget class="QCheckBox" name="valueRegularCheckbox">
+                <property name="geometry">
+                 <rect>
+                  <x>360</x>
+                  <y>105</y>
+                  <width>21</width>
+                  <height>22</height>
+                 </rect>
+                </property>
+                <property name="toolTip">
+                 <string>Zapnout podporu regulárních výrazů</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+               <widget class="QCheckBox" name="parseRegularCheckbox">
+                <property name="geometry">
+                 <rect>
+                  <x>360</x>
+                  <y>45</y>
+                  <width>21</width>
+                  <height>22</height>
+                 </rect>
+                </property>
+                <property name="toolTip">
+                 <string>Zapnout podporu regulárních výrazů</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+               <widget class="QComboBox" name="parseAbrBox">
+                <property name="geometry">
+                 <rect>
+                  <x>390</x>
+                  <y>40</y>
+                  <width>50</width>
+                  <height>32</height>
+                 </rect>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>50</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+               </widget>
+               <widget class="QComboBox" name="valueAbrBox">
+                <property name="geometry">
+                 <rect>
+                  <x>390</x>
+                  <y>100</y>
+                  <width>50</width>
+                  <height>32</height>
+                 </rect>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>50</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+               </widget>
+               <widget class="QLabel" name="imageLabel">
+                <property name="geometry">
+                 <rect>
+                  <x>7</x>
+                  <y>-13</y>
+                  <width>191</width>
+                  <height>161</height>
+                 </rect>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+               <widget class="QPushButton" name="coverImageButton">
+                <property name="geometry">
+                 <rect>
+                  <x>210</x>
+                  <y>50</y>
+                  <width>111</width>
+                  <height>34</height>
+                 </rect>
+                </property>
+                <property name="text">
+                 <string>Vybrat soubor</string>
+                </property>
+               </widget>
+               <zorder>coverImageButton</zorder>
+               <zorder>imageLabel</zorder>
+               <zorder>parseLabel</zorder>
+               <zorder>valueLabel</zorder>
+               <zorder>parseBox</zorder>
+               <zorder>valueBox</zorder>
+               <zorder>parseLine</zorder>
+               <zorder>valueLine</zorder>
+               <zorder>valueRegularCheckbox</zorder>
+               <zorder>parseRegularCheckbox</zorder>
+               <zorder>parseAbrBox</zorder>
+               <zorder>valueAbrBox</zorder>
+              </widget>
+              <widget class="QWidget" name="page"/>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QWidget" name="widget_2" native="true">
+          <property name="minimumSize">
+           <size>
+            <width>200</width>
+            <height>185</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>220</width>
+            <height>185</height>
+           </size>
+          </property>
+          <widget class="QGroupBox" name="groupBox">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>17</y>
+             <width>200</width>
+             <height>161</height>
+            </rect>
+           </property>
+           <property name="title">
+            <string>Číslo</string>
+           </property>
+           <widget class="QLabel" name="label">
+            <property name="geometry">
+             <rect>
+              <x>20</x>
+              <y>46</y>
+              <width>71</width>
+              <height>18</height>
+             </rect>
+            </property>
+            <property name="text">
+             <string>Start index:</string>
+            </property>
+           </widget>
+           <widget class="QLabel" name="label_2">
+            <property name="geometry">
+             <rect>
+              <x>20</x>
+              <y>86</y>
+              <width>58</width>
+              <height>18</height>
+             </rect>
+            </property>
+            <property name="text">
+             <string>Cifer</string>
+            </property>
+           </widget>
+           <widget class="QSpinBox" name="startIndexSpinBox">
+            <property name="geometry">
+             <rect>
+              <x>110</x>
+              <y>40</y>
+              <width>71</width>
+              <height>32</height>
+             </rect>
+            </property>
+            <property name="maximum">
+             <number>999999999</number>
+            </property>
+           </widget>
+           <widget class="QSpinBox" name="digitsSpinBox">
+            <property name="geometry">
+             <rect>
+              <x>110</x>
+              <y>80</y>
+              <width>71</width>
+              <height>32</height>
+             </rect>
+            </property>
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>999999999</number>
+            </property>
+           </widget>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>700</width>
+     <height>30</height>
+    </rect>
+   </property>
+  </widget>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>SortTable</class>
+   <extends>QTableWidget</extends>
+   <header>mp3player.widgets</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
