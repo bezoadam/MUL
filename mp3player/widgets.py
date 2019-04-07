@@ -1279,12 +1279,16 @@ class MP3Player(QtWidgets.QMainWindow):
 	def handleChooseImageButton(self):
 		'''Handle choose image button, select path and redraw cover image
 		'''
-		path = QtWidgets.QFileDialog.getOpenFileName(self, "Select image cover", filter="images ({})".format(" ".join(["*." + i for i in MP3File.coverExtensions])))[0]
-		if path != "":
-			self.coverLine.setText(path)
-			with open(self.coverLine.text(), "rb") as coverFile:
-				self.mp3file.loadCoverImageFromBytes(coverFile.read())
-			self.redrawCoverImage()
+		if self.mp3file is None:
+			QtWidgets.QMessageBox.warning(self, "Není načtený soubor",
+										  "Nebyl načten žádný hudební soubor, nelze vložit obrázek.")
+		else:
+			path = QtWidgets.QFileDialog.getOpenFileName(self, "Select image cover", filter="images ({})".format(" ".join(["*." + i for i in MP3File.coverExtensions])))[0]
+			if path != "":
+				self.coverLine.setText(path)
+				with open(self.coverLine.text(), "rb") as coverFile:
+					self.mp3file.loadCoverImageFromBytes(coverFile.read())
+				self.redrawCoverImage()
 
 	def handleOpenFileButton(self):
 		'''Handle open file button, create mp3 file and add it to table
