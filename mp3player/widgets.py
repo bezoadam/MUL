@@ -1,6 +1,6 @@
 import os
 from io import BytesIO
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 import math
 from typing import Dict, Set, List
 import threading
@@ -235,7 +235,6 @@ class MP3File(object):
 		"comment": "COMM",
 		"cover": "APIC",
 	})
-
 	tag_2_property: OrderedDict = OrderedDict({
 		"PATH": "fileName",  # Not tag, just for general usage
 		"TIT2": "songName",
@@ -331,6 +330,10 @@ class MP3File(object):
 
 		del audio
 
+	def canBeSavedToFile(self, propertyName, propertyValue):
+		# TODO
+		pass
+
 	def saveTagToFile(self, propertyName, propertyValue):
 		'''Save individual tag to file using property name and property value
 
@@ -372,6 +375,7 @@ class MP3File(object):
 		self.image = None
 		for key in self.property_2_tag:
 			self.__setattr__(key, MP3Tag(self, key, ""))
+		self.tmpProperties: Dict = defaultdict(str)
 
 	def canRenameFilename(self, newPath):
 		'''Check if the new name of the file can be set (check existing files and empty strings)
@@ -524,7 +528,7 @@ class MP3Table(QtWidgets.QTableWidget):
 
 		Returns:
 
-			int -- Row number
+			int -- Row index
 		'''
 		rows = [i.topRow() for i in self.selectedRanges() if i.rightColumn() - i.leftColumn() > 0]
 		if len(rows) == 1:
@@ -564,7 +568,7 @@ class MP3Table(QtWidgets.QTableWidget):
 
 		Keyword Arguments:
 
-			row {int} -- Row number which range should be selected (default: {None})
+			row {int} -- Row index which range should be selected (default: {None})
 		'''
 		row = self.lastSelectedRow if row is None else row
 		self.setRangeSelected(QtWidgets.QTableWidgetSelectionRange(0, 0, self.rowCount() - 1, self.columnCount() - 1), False)
@@ -809,6 +813,10 @@ class MP3Table(QtWidgets.QTableWidget):
 
 
 class EditWindow(QtWidgets.QMainWindow):
+	COVER_EDIT = 0
+	COMMON_EDIT = 1
+	GUESS_TAG_EDIT = 2
+
 	def __init__(self, *args):
 		'''Initializer of SortTable
 		'''
@@ -817,13 +825,9 @@ class EditWindow(QtWidgets.QMainWindow):
 		super(QtWidgets.QMainWindow, self).__init__()
 
 		# Load UI
-		print("LOADING UI")
 		uiFile = "ui/group_edit.ui"
 		with open(uiFile) as f:
 			uic.loadUi(f, self)
-
-		print(self.imageLabel)
-		print(self.coverImageButton)
 
 	def setup(self, mainWindow):
 		'''Setup function for connecting parent widgets with child widgets
@@ -834,50 +838,335 @@ class EditWindow(QtWidgets.QMainWindow):
 		'''
 		# Init
 		self.mainWindow = mainWindow
+		self.data = None
+		self.property = None
+		self.guess_tag = None
+		self.editType = None
+		self.image = None
+		self.imagePath = None
 		self.setWindowModality(Qt.Qt.ApplicationModal)
+		self.tableWidget.setup(self)
 
 		# Connect
+		self.upButton.clicked.connect(self.tableWidget.moveRowUp)
+		self.downButton.clicked.connect(self.tableWidget.moveRowDown)
+		self.removeButton.clicked.connect(self.tableWidget.handleRemoveRow)
 		self.finishButton.clicked.connect(self.handleFinishButton)
 		self.cancelButton.clicked.connect(self.handleCancelButton)
+		self.parseBox.currentIndexChanged.connect(self.handleParseBox)
+		self.valueBox.currentIndexChanged.connect(self.handleValueBox)
+		self.parseAbrBox.currentIndexChanged.connect(self.handleParseAbrBox)
+		self.valueAbrBox.currentIndexChanged.connect(self.handleValueAbrBox)
+		self.parseLine.textChanged.connect(self.parseChanged)
+		self.valueLine.textChanged.connect(self.valueChanged)
+		self.digitsSpinBox.valueChanged.connect(self.refreshDataInTable)
+		self.startIndexSpinBox.valueChanged.connect(self.refreshDataInTable)
+		self.chooseImageButton.clicked.connect(self.handleChooseImageButton)
+		self.removeImageButton.clicked.connect(self.handleRemoveImageButton)
 
-	def exec(self, property, data: List[MP3File]):
-		self.property = property
+		# Widgets
+		self.coverWidgets = [
+			self.imageLabel,
+			self.chooseImageButton,
+			self.removeImageButton,
+		]
+		self.commonTagsWidgets = [
+			self.valueLabel,
+			self.valueBox,
+			self.valueLine,
+			self.valueAbrBox,
+			self.parseLabel,
+			self.parseBox,
+			self.parseLine,
+			self.parseAbrBox,
+			self.groupBox,
+			self.sideWidget,
+			self.tableWidget,
+		]
+		self.guessTagsWidgets = [
+			self.parseLabel,
+			self.parseLine,
+			self.parseAbrBox,
+			self.sideWidget,
+			self.tableWidget,
+		]
+		self.parseAbbreviations = [
+			"\\al() - album name",
+			"\\ar() - artist name",
+			"\\sn() - song name",
+			"\\tr() - track",
+			"\\ye() - year",
+			"\\ge() - genre",
+			"\\co() - comment",
+		]
+		self.abbreviations = [
+			"\%al - album name",
+			"\%ar - artist name",
+			"\%sn - song name",
+			"\%tr - track",
+			"\%ye - year",
+			"\%ge - genre",
+			"\%co - comment",
+			"\%d - digits from right widget",
+		]
+		self.tags = [i for i in MP3File.property_2_name if i != "cover"]
+		self.parseBox.addItems(self.tags)
+		self.parseAbrBox.addItems(self.parseAbbreviations)
+		self.valueAbrBox.addItems(self.abbreviations)
+
+	def exec(self, data: List[MP3File], property=None, guess_tag=False):
 		self.data = data
+		self.property = property
+		self.guess_tag = guess_tag
 
-		self.name = MP3File.property_2_name[self.property]
-		self.tag = MP3File.property_2_tag[self.property]
-		self.titleLabel.setText("Úprava položky: " + self.name)
-		self.init(self.tag)
+		self.setEditType(self.property, self.guess_tag)
+
+		self.init()
+
 		self.mainWindow.setEnabled(False)
 		super().show()
 
-	def init(self, tag):
+	def setEditType(self, property, guess_tag):
+		if guess_tag:
+			self.editType = self.GUESS_TAG_EDIT
+		elif property == "cover":
+			self.editType = self.COVER_EDIT
+		elif property in MP3File.property_2_name:
+			self.editType = self.COMMON_EDIT
+
+	def isGuessTagEdit(self):
+		return self.editType == self.GUESS_TAG_EDIT
+
+	def isCommonEdit(self):
+		return self.editType == self.COMMON_EDIT
+
+	def isCoverEdit(self):
+		return self.editType == self.COVER_EDIT
+
+	def initEditCoverWidgets(self):
+		self.name = MP3File.property_2_name[self.property]
+		self.tag = MP3File.property_2_tag[self.property]
+		self.titleLabel.setText("Úprava položky: " + self.name)
+
+		[i.setVisible(False) for i in self.commonTagsWidgets + self.guessTagsWidgets]
+		[i.setVisible(True) for i in self.coverWidgets]
+
+	def initEditGuessTagsWidgets(self):
+		self.titleLabel.setText("Vytvoření tagů ze jména souboru")
+
+		[i.setVisible(False) for i in self.commonTagsWidgets + self.coverWidgets]
+		[i.setVisible(True) for i in self.guessTagsWidgets]
+
+		self.parseLine.setEnabled(True)
+		self.parseAbrBox.setEnabled(True)
+
+	def initEditCommonTagsWidgets(self):
+		self.name = MP3File.property_2_name[self.property]
+		self.tag = MP3File.property_2_tag[self.property]
+		self.titleLabel.setText("Úprava položky: " + self.name)
+
+		[i.setVisible(False) for i in self.coverWidgets + self.guessTagsWidgets]
+		[i.setVisible(True) for i in self.commonTagsWidgets]
+		self.parseLine.setEnabled(False)
+		self.parseAbrBox.setEnabled(False)
+		self.valueLine.setEnabled(False)
+		self.valueAbrBox.setEnabled(False)
+
+	def init(self):
 		self.upButton.setEnabled(False)
 		self.downButton.setEnabled(False)
+		self.removeButton.setEnabled(False)
 		self.finishButton.setEnabled(False)
-		print(tag)
-		if tag == "APIC":
-			self.imageLabel.setVisible(True)
-			self.coverImageButton.setVisible(True)
-			self.valueLabel.setVisible(False)
-			self.valueBox.setVisible(False)
-			self.valueLine.setVisible(False)
-			self.valueAbrBox.setVisible(False)
-			self.valueRegularCheckbox.setVisible(False)
-			self.parseLabel.setVisible(False)
-			self.parseBox.setVisible(False)
-			self.parseLine.setVisible(False)
-			self.parseAbrBox.setVisible(False)
-			self.parseRegularCheckbox.setVisible(False)
-		elif tag == "autotag":
-			pass
+
+		if self.isCoverEdit():
+			self.initEditCoverWidgets()
+		elif self.isCommonEdit():
+			self.initEditCommonTagsWidgets()
+		elif self.isGuessTagEdit():
+			self.initEditGuessTagsWidgets()
 		else:
-			self.imageLabel.setVisible(False)
-			self.coverImageButton.setVisible(False)
-			pass
+			raise ValueError("Wrong property type")
 
 		# Fill data to table
+		self.image = None
+		self.tableWidget.setRowCount(0)
+		self.createHeaders()
 		self.fillRows(self.data)
+		self.refreshDataInTable()
+
+		# Setup input widgets
+		self.parseBox.setCurrentIndex(-1)
+		self.valueBox.setCurrentIndex(0)
+		self.parseAbrBox.setCurrentIndex(-1)
+		self.valueAbrBox.setCurrentIndex(-1)
+		self.valueLine.setText("")
+		self.parseLine.setText("")
+
+	def parseChanged(self, text):
+		self.refreshDataInTable()
+
+	def valueChanged(self, text):
+		self.refreshDataInTable()
+
+	def handleParseBox(self, index):
+		if index >= 0:
+			self.parseLine.setEnabled(True)
+			self.parseAbrBox.setEnabled(True)
+		self.refreshDataInTable()
+
+	def handleValueBox(self, index):
+		if index == 4:
+			self.valueLine.setEnabled(True)
+			self.valueAbrBox.setEnabled(True)
+		else:
+			self.valueLine.setText("")
+			self.valueLine.setEnabled(False)
+			self.valueAbrBox.setEnabled(False)
+		self.refreshDataInTable()
+
+	def handleParseAbrBox(self, index):
+		if index >= 0:
+			self.parseAbrBox.setCurrentIndex(-1)
+			self.parseLine.setText(self.parseLine.text() + self.parseAbbreviations[index].split(" ")[0])
+
+	def handleValueAbrBox(self, index):
+		if index >= 0:
+			self.valueAbrBox.setCurrentIndex(-1)
+			self.valueLine.setText(self.valueLine.text() + self.abbreviations[index].split(" ")[0])
+
+	def createHeaders(self):
+		if self.isGuessTagEdit():
+			header_labels = [j for (i, j) in MP3File.property_2_name.items() if i != "cover"]
+			self.tableWidget.horizontalHeader().setMinimumSectionSize(70)
+			self.tableWidget.horizontalHeader().setDefaultSectionSize(70)
+			[self.tableWidget.setColumnWidth(i, 70) for i in range(len(header_labels))]
+		else:
+			header_labels = ["Originální", "Nový"]
+			self.tableWidget.horizontalHeader().setMinimumSectionSize(200)
+			self.tableWidget.horizontalHeader().setDefaultSectionSize(200)
+			[self.tableWidget.setColumnWidth(i, 200) for i in range(len(header_labels))]
+		self.tableWidget.createHeaders(header_labels)
+
+	def fillRows(self, data):
+		for mp3file in self.data:
+			self.addRow(mp3file)
+
+	def addRow(self, mp3file):
+		# Get current number of rows and insert new row
+		rowCount = self.tableWidget.rowCount()
+		self.tableWidget.insertRow(rowCount)
+
+		if self.isGuessTagEdit():
+			# insert all other tags to table
+			for idx, key in enumerate(mp3file.property_2_tag):
+				if key == "fileName":
+					mp3file.tmpProperties[key] = MP3Tag(mp3file, key, mp3file.fileName)
+					self.tableWidget.setItem(rowCount, idx, mp3file.tmpProperties[key])
+				elif key != "cover":
+					mp3file.tmpProperties[key] = MP3Tag(mp3file, key, "")
+					self.tableWidget.setItem(rowCount, idx, mp3file.tmpProperties[key])
+		else:
+			self.tableWidget.setItem(rowCount, 0, MP3Tag(mp3file, self.property, mp3file.__getattribute__(self.property).text()))
+			mp3file.tmpProperties[self.property] = MP3Tag(mp3file, self.property, "Test")
+			self.tableWidget.setItem(rowCount, 1, mp3file.tmpProperties[self.property])
+
+	def removeRow(self, row):
+		self.data.pop(row)
+		self.refreshDataInTable()
+
+	def switchRows(self, row1, row2):
+		tmp = self.data[row1]
+		self.data[row1] = self.data[row2]
+		self.data[row2] = tmp
+
+		self.refreshDataInTable()
+
+	def refreshDataInTable(self):
+		if self.data is None:
+			return
+		for idx, mp3file in enumerate(self.data):
+			if self.isGuessTagEdit():
+				print("Parsing the parseLine: {}".format(self.parseLine.text()))
+				# TODO: Set correctly the values
+				for key in mp3file.tmpProperties:
+					mp3file.tmpProperties[key].setText("Tags")
+			else:
+				if self.valueBox.currentIndex() == 0:
+					mp3file.tmpProperties[self.property].setText(mp3file.__getattribute__(self.property).text())
+				elif self.valueBox.currentIndex() == 1:
+					mp3file.tmpProperties[self.property].setText(mp3file.__getattribute__(self.property).text().lower())
+				elif self.valueBox.currentIndex() == 2:
+					mp3file.tmpProperties[self.property].setText(mp3file.__getattribute__(self.property).text().upper())
+				elif self.valueBox.currentIndex() == 3:
+					mp3file.tmpProperties[self.property].setText(mp3file.__getattribute__(self.property).text().capitalize())
+				elif self.valueBox.currentIndex() == 4:
+					# TODO process value
+					value = self.valueLine.text()
+
+					value = value.replace("%d", str(self.startIndexSpinBox.value() + idx).zfill(self.digitsSpinBox.value()))
+					mp3file.tmpProperties[self.property].setText(value)
+
+		if self.tableWidget.rowCount() > 0:
+			self.finishButton.setEnabled(True)
+		else:
+			self.finishButton.setEnabled(False)
+
+	def validateChanges(self):
+		# TODO validate it
+		return True
+
+	def saveChanges(self):
+		if not self.validateChanges():
+			# TODO Show warning messagebox if errors occured
+			return
+		for mp3file in self.data:
+			mp3file.saveTagToFile(self.property, mp3file.tmpProperties[self.property].text())
+
+	def loadCoverImageFromBytes(self, bytes=None):
+		'''Method is loading cover image (QPixmap) from bytes
+
+		Arguments:
+
+			bytes {BytesIO} -- Bytes containing image (loaded from file or from tags data, or whatever)
+		'''
+		if bytes is not None:
+			self.image = QtGui.QPixmap.fromImage(QtGui.QImage.fromData(bytes))
+			img = self.image
+			if (img.width() / img.height()) > (self.imageLabel.width() / self.imageLabel.height()):
+				img = img.scaledToWidth(self.imageLabel.width())
+			else:
+				img = img.scaledToHeight(self.imageLabel.height())
+			self.imageLabel.setPixmap(img)
+			self.imageLabel.show()
+		else:
+			self.image = None
+			self.imagePath = None
+			for mp3file in self.data:
+				mp3file.tmpProperties[self.property].setText("")
+			self.imageLabel.hide()
+
+	def handleChooseImageButton(self):
+		'''Handle choose image button, select path and redraw cover image
+		'''
+		path = QtWidgets.QFileDialog.getOpenFileName(self, "Select image cover", filter="images ({})".format(" ".join(["*." + i for i in MP3File.coverExtensions])))[0]
+		if path != "":
+			self.imagePath = path
+			with open(self.imagePath, "rb") as coverFile:
+				self.loadCoverImageFromBytes(coverFile.read())
+			for mp3file in self.data:
+				mp3file.tmpProperties[self.property].setText(self.imagePath)
+
+	def handleRemoveImageButton(self):
+		'''Handle delete cover album button
+		'''
+		if self.image is not None:
+			msg = "Opravdu chcete odstranit fotku alba?"
+			reply = QtWidgets.QMessageBox.question(self, 'Message', msg, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
+
+			if reply == QtWidgets.QMessageBox.Yes:
+				self.loadCoverImageFromBytes()
+		else:
+			QtWidgets.QMessageBox.warning(self, "Fotka alba neexistuje", "Fotku alba nelze odstranit, protože neexistuje.")
 
 	def closeEvent(self, event):
 		'''If the window is closing, just memorize it happend
@@ -891,13 +1180,13 @@ class EditWindow(QtWidgets.QMainWindow):
 		event.accept()
 
 	def handleFinishButton(self):
+		self.saveChanges()
+		self.mainWindow.redrawCoverImage()
+		self.mainWindow.fillLineEdits()
 		self.close()
 
 	def handleCancelButton(self):
 		self.close()
-
-	def fillRows(self, data):
-		pass
 
 
 class SortTable(QtWidgets.QTableWidget):
@@ -915,9 +1204,37 @@ class SortTable(QtWidgets.QTableWidget):
 	def __init__(self, *args):
 		'''Initializer of SortTable
 		'''
-		'''Initializer
-		'''
-		super(QtWidgets.QTableWidget, self).__init__()
+		super(QtWidgets.QTableWidget, self).__init__(*args)
+
+		# Setup handlers
+		self.setupHandlers()
+
+	def setup(self, editWindow):
+		self.editWindow = editWindow
+
+	def setupHandlers(self):
+		self.itemSelectionChanged.connect(self.handleRowSelection)
+
+	def handleRowSelection(self):
+		row = self.getSelectedRowFromRanges()
+		if row is not None:
+			if row == 0:
+				self.editWindow.upButton.setEnabled(False)
+				self.editWindow.downButton.setEnabled(True)
+			elif row == self.rowCount() - 1:
+				self.editWindow.upButton.setEnabled(True)
+				self.editWindow.downButton.setEnabled(False)
+			else:
+				self.editWindow.upButton.setEnabled(True)
+				self.editWindow.downButton.setEnabled(True)
+			self.editWindow.removeButton.setEnabled(True)
+		else:
+			self.editWindow.upButton.setEnabled(False)
+			self.editWindow.downButton.setEnabled(False)
+			self.editWindow.removeButton.setEnabled(False)
+
+	def isEmpty(self):
+		return self.rowCount() > 0
 
 	def getMP3File(self, row):
 		'''Get mp3 file wrapper from this table
@@ -937,13 +1254,57 @@ class SortTable(QtWidgets.QTableWidget):
 
 		Returns:
 
-			int -- Row number
+			int -- Row index
 		'''
 		rows = [i.topRow() for i in self.selectedRanges() if i.rightColumn() - i.leftColumn() > 0]
 		if len(rows) == 1:
 			return rows[0]
 		else:
 			return None
+
+	def setRangeSelectionByRow(self, row):
+		'''Set RangeSelected according to the single row given (if not given set it by actual selected row)
+
+		Keyword Arguments:
+
+			row {int} -- Row index which range should be selected (default: {None})
+		'''
+		self.setRangeSelected(QtWidgets.QTableWidgetSelectionRange(0, 0, self.rowCount() - 1, self.columnCount() - 1), False)
+		if row is not None:
+			self.setRangeSelected(QtWidgets.QTableWidgetSelectionRange(row, 0, row, self.columnCount() - 1), True)
+			self.handleRowSelection()
+
+	def switchRows(self, row1, row2):
+		for i in range(self.columnCount()):
+			item1 = self.takeItem(row1, i)
+			item2 = self.takeItem(row2, i)
+			self.setItem(row2, i, item1)
+			self.setItem(row1, i, item2)
+
+	def moveRowUp(self):
+		row = self.getSelectedRowFromRanges()
+		if row is not None:
+			self.switchRows(row, row - 1)
+			self.editWindow.switchRows(row, row - 1)
+			self.setRangeSelectionByRow(row - 1)
+
+	def moveRowDown(self):
+		row = self.getSelectedRowFromRanges()
+		if row is not None:
+			self.switchRows(row, row + 1)
+			self.editWindow.switchRows(row, row + 1)
+			self.setRangeSelectionByRow(row + 1)
+
+	def handleRemoveRow(self):
+		row = self.getSelectedRowFromRanges()
+		if row is not None:
+			self.removeRow(row)
+			self.editWindow.removeRow(row)
+
+	def createHeaders(self, header_labels):
+		self.setColumnCount(len(header_labels))
+		self.setHorizontalHeaderLabels(header_labels)
+		self.setFocusPolicy(Qt.Qt.NoFocus)
 
 	def fillRows(self, data):
 		pass
@@ -970,12 +1331,6 @@ class SortTable(QtWidgets.QTableWidget):
 		for idx, key in enumerate(mp3file.property_2_tag):
 			if key != "cover":
 				self.setItem(rowCount, idx + 1, mp3file.__getattribute__(key))
-
-	def moveRowUp(self, row):
-		pass
-
-	def moveRowDown(self, row):
-		pass
 
 	def refreshTable(self, row):
 		pass
@@ -1079,6 +1434,7 @@ class MP3Player(QtWidgets.QMainWindow):
 		self.removeFileButton.clicked.connect(self.handleRemoveFileButton)
 		self.deleteCoverButton.clicked.connect(self.handleDeleteCoverButton)
 		self.renameFileButton.clicked.connect(self.handleRenameFileButton)
+		self.guessTagButton.clicked.connect(self.handleGuessTagButton)
 		self.saveChangesButton.clicked.connect(self.handleSaveChangesButton)
 		self.groupEditButton.clicked.connect(self.handleGroupEditButton)
 		self.playButton.clicked.connect(self.handlePlayButton)
@@ -1189,15 +1545,17 @@ class MP3Player(QtWidgets.QMainWindow):
 		for key in MP3File.property_2_name:
 			self.__getattribute__(key + "Line").setText("")
 
-	def fillLineEdits(self, mp3file):
+	def fillLineEdits(self, mp3file=None):
 		'''Fill line edits from mp3 file
 
 		Arguments:
 
 			mp3file {MP3File} -- MP3File
 		'''
-		for key in mp3file.property_2_tag:
-			self.__getattribute__(key + "Line").setText(mp3file.__getattribute__(key).text())
+		mp3file = self.mp3file if mp3file is None else mp3file
+		if mp3file is not None:
+			for key in mp3file.property_2_tag:
+				self.__getattribute__(key + "Line").setText(mp3file.__getattribute__(key).text())
 
 	def redrawCoverImage(self):
 		'''Redraw cover image
@@ -1506,28 +1864,6 @@ class MP3Player(QtWidgets.QMainWindow):
 		if self.tableWidget.rowCount() == 0 or self.isPlaying():
 			self.stop()
 
-	def handleDeleteCoverButton(self):
-		'''Handle delete cover album button
-		'''
-		if self.mp3file is not None and self.mp3file.image is not None:
-			msg = "Opravdu chcete odstranit fotku alba?"
-			reply = QtWidgets.QMessageBox.question(self, 'Message', msg, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
-
-			if reply == QtWidgets.QMessageBox.Yes:
-				self.mp3file.removeCoverImageFromFile()
-				self.coverLine.setText("")
-				self.redrawCoverImage()
-		else:
-			QtWidgets.QMessageBox.warning(self, "Fotka alba neexistuje", "Fotku alba nelze odstranit, protože neexistuje.")
-
-	def handleRenameFileButton(self):
-		'''Handle rename file button
-		'''
-		if self.tableWidget.checkedRowsCount() > 0:
-			self.editWindow.exec("fileName", self.tableWidget.getCheckedMP3Files())
-		else:
-			QtWidgets.QMessageBox.warning(self, "Nevybrané žádné soubory", "Nebyly vybrány žádné soubory pro přejmenování.")
-
 	def saveTags(self):
 		'''Save tags from lineEdits
 
@@ -1576,14 +1912,44 @@ class MP3Player(QtWidgets.QMainWindow):
 		else:
 			QtWidgets.QMessageBox.warning(self, "Není načtený soubor", "Nebyl načten žádný hudební soubor, nelze uložit změny.")
 
+	def handleDeleteCoverButton(self):
+		'''Handle delete cover album button
+		'''
+		if self.mp3file is not None and self.mp3file.image is not None:
+			msg = "Opravdu chcete odstranit fotku alba?"
+			reply = QtWidgets.QMessageBox.question(self, 'Message', msg, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
+
+			if reply == QtWidgets.QMessageBox.Yes:
+				self.mp3file.removeCoverImageFromFile()
+				self.coverLine.setText("")
+				self.redrawCoverImage()
+		else:
+			QtWidgets.QMessageBox.warning(self, "Fotka alba neexistuje", "Fotku alba nelze odstranit, protože neexistuje.")
+
+	def handleRenameFileButton(self):
+		'''Handle rename file button
+		'''
+		if self.tableWidget.checkedRowsCount() > 0:
+			self.editWindow.exec(self.tableWidget.getCheckedMP3Files(), "fileName", False)
+		else:
+			QtWidgets.QMessageBox.warning(self, "Nevybrané žádné soubory", "Nebyly vybrány žádné soubory pro přejmenování.")
+
+	def handleGuessTagButton(self):
+		'''Handle guess tags button
+		'''
+		if self.tableWidget.checkedRowsCount() > 0:
+			self.editWindow.exec(self.tableWidget.getCheckedMP3Files(), None, True)
+		else:
+			QtWidgets.QMessageBox.warning(self, "Nevybrané žádné soubory", "Nebyly vybrány žádné soubory pro odhad tagů.")
+
 	def handleGroupEditButton(self):
 		'''Handle group edit button
 		'''
 		if self.tableWidget.checkedRowsCount() > 0:
 			if self.tagDialog.exec() > 0:
-				self.editWindow.exec(self.tagDialog.getChoosedProperty(), self.tableWidget.getCheckedMP3Files())
+				self.editWindow.exec(self.tableWidget.getCheckedMP3Files(), self.tagDialog.getChoosedProperty(), False)
 		else:
-			QtWidgets.QMessageBox.warning(self, "Nevybrané žádné soubory", "Nebyly vybrány žádné soubory pro hromadné přejmenování.")
+			QtWidgets.QMessageBox.warning(self, "Nevybrané žádné soubory", "Nebyly vybrány žádné soubory pro hromadné úpravy.")
 
 	def handlePlayButton(self):
 		'''Handle play button

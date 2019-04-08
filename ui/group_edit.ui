@@ -114,10 +114,10 @@
            <bool>false</bool>
           </attribute>
           <attribute name="horizontalHeaderDefaultSectionSize">
-           <number>200</number>
+           <number>50</number>
           </attribute>
           <attribute name="horizontalHeaderMinimumSectionSize">
-           <number>200</number>
+           <number>50</number>
           </attribute>
           <attribute name="horizontalHeaderStretchLastSection">
            <bool>true</bool>
@@ -144,7 +144,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QWidget" name="widget" native="true">
+         <widget class="QWidget" name="sideWidget" native="true">
           <property name="minimumSize">
            <size>
             <width>218</width>
@@ -194,6 +194,22 @@
             <string>Ctrl+S</string>
            </property>
           </widget>
+          <widget class="QPushButton" name="removeButton">
+           <property name="geometry">
+            <rect>
+             <x>30</x>
+             <y>120</y>
+             <width>151</width>
+             <height>31</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>Remove</string>
+           </property>
+           <property name="checkable">
+            <bool>false</bool>
+           </property>
+          </widget>
          </widget>
         </item>
        </layout>
@@ -215,6 +231,11 @@
         </item>
         <item>
          <widget class="QLabel" name="titleLabel">
+          <property name="font">
+           <font>
+            <pointsize>20</pointsize>
+           </font>
+          </property>
           <property name="text">
            <string>Úprava XXXXXXXX:</string>
           </property>
@@ -241,260 +262,296 @@
          <enum>QLayout::SetMaximumSize</enum>
         </property>
         <item>
-         <layout class="QVBoxLayout" name="verticalLayout" stretch="0">
+         <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,0,0,0">
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_8">
-            <property name="topMargin">
-             <number>18</number>
+           <spacer name="verticalSpacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
             </property>
-            <item alignment="Qt::AlignVCenter">
-             <widget class="QStackedWidget" name="stackedWidget_2">
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_6">
+            <item>
+             <spacer name="horizontalSpacer_7">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Fixed</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QLabel" name="parseLabel">
               <property name="minimumSize">
                <size>
-                <width>0</width>
-                <height>170</height>
+                <width>70</width>
+                <height>0</height>
                </size>
               </property>
               <property name="maximumSize">
                <size>
-                <width>16777215</width>
-                <height>170</height>
+                <width>70</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Parsovat:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="parseBox">
+              <property name="minimumSize">
+               <size>
+                <width>100</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>100</width>
+                <height>16777215</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="parseLine">
+              <property name="minimumSize">
+               <size>
+                <width>161</width>
+                <height>0</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="parseAbrBox">
+              <property name="maximumSize">
+               <size>
+                <width>50</width>
+                <height>16777215</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_9">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Fixed</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <spacer name="verticalSpacer_3">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::Fixed</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>10</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_9">
+            <item>
+             <spacer name="horizontalSpacer_3">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QPushButton" name="chooseImageButton">
+              <property name="text">
+               <string>Vybrat soubor</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_4">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_7">
+            <item>
+             <spacer name="horizontalSpacer_8">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Fixed</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QLabel" name="valueLabel">
+              <property name="minimumSize">
+               <size>
+                <width>70</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>70</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Nový tag:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="valueBox">
+              <property name="minimumSize">
+               <size>
+                <width>100</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>100</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <item>
+               <property name="text">
+                <string>Původní</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Malá písmena</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Velká písmena</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Kapitálky</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Vlastní</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="valueLine"/>
+            </item>
+            <item>
+             <widget class="QComboBox" name="valueAbrBox">
+              <property name="maximumSize">
+               <size>
+                <width>50</width>
+                <height>16777215</height>
                </size>
               </property>
               <property name="currentIndex">
-               <number>0</number>
+               <number>-1</number>
               </property>
-              <widget class="QWidget" name="stackedWidget_2Page1">
-               <widget class="QLabel" name="parseLabel">
-                <property name="geometry">
-                 <rect>
-                  <x>10</x>
-                  <y>45</y>
-                  <width>81</width>
-                  <height>18</height>
-                 </rect>
-                </property>
-                <property name="text">
-                 <string>Parsovat tag:</string>
-                </property>
-               </widget>
-               <widget class="QLabel" name="valueLabel">
-                <property name="geometry">
-                 <rect>
-                  <x>10</x>
-                  <y>104</y>
-                  <width>81</width>
-                  <height>18</height>
-                 </rect>
-                </property>
-                <property name="text">
-                 <string>Nový tag:</string>
-                </property>
-               </widget>
-               <widget class="QComboBox" name="parseBox">
-                <property name="geometry">
-                 <rect>
-                  <x>100</x>
-                  <y>40</y>
-                  <width>80</width>
-                  <height>32</height>
-                 </rect>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>80</width>
-                  <height>16777215</height>
-                 </size>
-                </property>
-               </widget>
-               <widget class="QComboBox" name="valueBox">
-                <property name="geometry">
-                 <rect>
-                  <x>100</x>
-                  <y>100</y>
-                  <width>80</width>
-                  <height>32</height>
-                 </rect>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>80</width>
-                  <height>16777215</height>
-                 </size>
-                </property>
-                <item>
-                 <property name="text">
-                  <string>Původní</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Malá písmena</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Velká písmena</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Kapitálky</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Vlastní</string>
-                 </property>
-                </item>
-               </widget>
-               <widget class="QLineEdit" name="parseLine">
-                <property name="geometry">
-                 <rect>
-                  <x>190</x>
-                  <y>40</y>
-                  <width>161</width>
-                  <height>32</height>
-                 </rect>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>161</width>
-                  <height>0</height>
-                 </size>
-                </property>
-               </widget>
-               <widget class="QLineEdit" name="valueLine">
-                <property name="geometry">
-                 <rect>
-                  <x>190</x>
-                  <y>100</y>
-                  <width>161</width>
-                  <height>32</height>
-                 </rect>
-                </property>
-               </widget>
-               <widget class="QCheckBox" name="valueRegularCheckbox">
-                <property name="geometry">
-                 <rect>
-                  <x>360</x>
-                  <y>105</y>
-                  <width>21</width>
-                  <height>22</height>
-                 </rect>
-                </property>
-                <property name="toolTip">
-                 <string>Zapnout podporu regulárních výrazů</string>
-                </property>
-                <property name="text">
-                 <string/>
-                </property>
-                <property name="checked">
-                 <bool>true</bool>
-                </property>
-               </widget>
-               <widget class="QCheckBox" name="parseRegularCheckbox">
-                <property name="geometry">
-                 <rect>
-                  <x>360</x>
-                  <y>45</y>
-                  <width>21</width>
-                  <height>22</height>
-                 </rect>
-                </property>
-                <property name="toolTip">
-                 <string>Zapnout podporu regulárních výrazů</string>
-                </property>
-                <property name="text">
-                 <string/>
-                </property>
-                <property name="checked">
-                 <bool>true</bool>
-                </property>
-               </widget>
-               <widget class="QComboBox" name="parseAbrBox">
-                <property name="geometry">
-                 <rect>
-                  <x>390</x>
-                  <y>40</y>
-                  <width>50</width>
-                  <height>32</height>
-                 </rect>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>50</width>
-                  <height>16777215</height>
-                 </size>
-                </property>
-               </widget>
-               <widget class="QComboBox" name="valueAbrBox">
-                <property name="geometry">
-                 <rect>
-                  <x>390</x>
-                  <y>100</y>
-                  <width>50</width>
-                  <height>32</height>
-                 </rect>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>50</width>
-                  <height>16777215</height>
-                 </size>
-                </property>
-               </widget>
-               <widget class="QLabel" name="imageLabel">
-                <property name="geometry">
-                 <rect>
-                  <x>7</x>
-                  <y>-13</y>
-                  <width>191</width>
-                  <height>161</height>
-                 </rect>
-                </property>
-                <property name="text">
-                 <string/>
-                </property>
-               </widget>
-               <widget class="QPushButton" name="coverImageButton">
-                <property name="geometry">
-                 <rect>
-                  <x>210</x>
-                  <y>50</y>
-                  <width>111</width>
-                  <height>34</height>
-                 </rect>
-                </property>
-                <property name="text">
-                 <string>Vybrat soubor</string>
-                </property>
-               </widget>
-               <zorder>coverImageButton</zorder>
-               <zorder>imageLabel</zorder>
-               <zorder>parseLabel</zorder>
-               <zorder>valueLabel</zorder>
-               <zorder>parseBox</zorder>
-               <zorder>valueBox</zorder>
-               <zorder>parseLine</zorder>
-               <zorder>valueLine</zorder>
-               <zorder>valueRegularCheckbox</zorder>
-               <zorder>parseRegularCheckbox</zorder>
-               <zorder>parseAbrBox</zorder>
-               <zorder>valueAbrBox</zorder>
-              </widget>
-              <widget class="QWidget" name="page"/>
              </widget>
             </item>
+            <item>
+             <spacer name="horizontalSpacer_10">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Fixed</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
            </layout>
+          </item>
+          <item>
+           <spacer name="verticalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
           </item>
          </layout>
         </item>
         <item>
-         <widget class="QWidget" name="widget_2" native="true">
+         <widget class="QWidget" name="upperRightWidget" native="true">
           <property name="minimumSize">
            <size>
-            <width>200</width>
+            <width>220</width>
             <height>185</height>
            </size>
           </property>
@@ -571,6 +628,36 @@
              <number>999999999</number>
             </property>
            </widget>
+          </widget>
+          <widget class="QLabel" name="imageLabel">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>10</y>
+             <width>300</width>
+             <height>160</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+          <widget class="QPushButton" name="removeImageButton">
+           <property name="geometry">
+            <rect>
+             <x>130</x>
+             <y>130</y>
+             <width>35</width>
+             <height>35</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset>
+             <normaloff>icon/delete.png</normaloff>icon/delete.png</iconset>
+           </property>
           </widget>
          </widget>
         </item>
