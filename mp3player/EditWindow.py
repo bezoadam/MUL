@@ -91,6 +91,7 @@ class EditWindow(QtWidgets.QMainWindow):
 			"\\ye() - year",
 			"\\ge() - genre",
 			"\\co() - comment",
+			"\\del() - delimeter",
 		]
 		self.abbreviations = [
 			"\%al - album name",
@@ -110,6 +111,7 @@ class EditWindow(QtWidgets.QMainWindow):
 			"year": "\ye(",
 			"genre": "\ge(",
 			"comment": "\co(",
+			"delimeter": "\del(",
 		})
 		self.tags = [i for i in MP3File.property_2_name if i != "cover"]
 		self.parseBox.addItems(self.tags)
@@ -300,15 +302,31 @@ class EditWindow(QtWidgets.QMainWindow):
 							found = m.group(1)
 							regexDict[m.span()[0]] = {key: found}
 							#print("{}: {}".format(key,found))
-						mp3file.tmpProperties[key].setText("Tags")
+						#mp3file.tmpProperties[key].setText("Tags")
+
+				regex = re.escape("\del(") + "(.+?)" + "\\)"
+				m = re.search(regex, self.parseLine.text())
+				if m:
+					found = m.group(1)
+					regexDict[m.span()[0]] = {"delimeter": found}
+
 				print(regexDict)
 				for key in sorted(regexDict):
 					value = regexDict[key]
 					regex = list(value.values())[0]
-					occurence = re.findall(regex + "-", songName)
+					ID3Tag = list(value.keys())[0]
+					occurence = []
+					try:
+						occurence = re.findall(regex, songName)
+					except re.error:
+						pass
+
 					print(songName)
 					if len(occurence) > 0:
-						print("{}: {}".format(list(value.keys())[0],occurence))
+						print("{}: {}".format(ID3Tag,occurence[0]))
+						if ID3Tag != "delimeter":
+
+							mp3file.tmpProperties[ID3Tag].setText(occurence[0])
 						songName = songName.replace(occurence[0], '')
 
 			else:
