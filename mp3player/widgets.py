@@ -1300,12 +1300,19 @@ class MP3Player(QtWidgets.QMainWindow):
 			self.tableWidget.addMP3(mp3file)
 
 	def handleLoadID3Tags(self):
-		ID3Tags = self.guessID3Tags(os.path.splitext(self.mp3file.baseName)[0])
-		# Save all other tags
 		if self.mp3file is not None:
-			for key, value in ID3Tags.items():
-				if value not in ["APIC", "PATH"]:
-					self.mp3file.saveTagToFile(key, value)
+			try:
+				ID3Tags = self.guessID3Tags(os.path.splitext(self.mp3file.baseName)[0])
+				# Save all tags
+				for key, value in ID3Tags.items():
+					if value not in ["APIC", "PATH"]:
+						self.mp3file.saveTagToFile(key, value)
+			except Exception:
+				QtWidgets.QMessageBox.warning(self, "Nelze uložit data", "Vyskytla se chyba při ukládání")
+			QtWidgets.QMessageBox.information(self, "Uložení proběhlo úspěšně", "Načítaní ID3 tagov z názvu souboru proběhlo úspěšně.")
+		else:
+			QtWidgets.QMessageBox.warning(self, "Není načtený soubor",
+										  "Nebyl načten žádný hudební soubor, nelze uložit změny.")
 
 	def guessID3Tags(self, songName="Ego_V-meste-snov_01_Precedens_2018_Hip-hop"):
 		ID3Tags = ["artist", "songName", "track", "album", "year", "genre"]
