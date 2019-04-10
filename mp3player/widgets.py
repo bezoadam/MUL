@@ -1300,6 +1300,8 @@ class MP3Player(QtWidgets.QMainWindow):
 			self.tableWidget.addMP3(mp3file)
 
 	def handleLoadID3Tags(self):
+		'''Handle loading ID3 tags button
+		'''
 		if self.mp3file is not None:
 			try:
 				ID3Tags = self.guessID3Tags(os.path.splitext(self.mp3file.baseName)[0])
@@ -1308,16 +1310,33 @@ class MP3Player(QtWidgets.QMainWindow):
 					if value not in ["APIC", "PATH"]:
 						self.mp3file.saveTagToFile(key, value)
 						self.__getattribute__(key + "Line").setText(value)
-			except Exception:
-				QtWidgets.QMessageBox.warning(self, "Nelze uložit data", "Vyskytla se chyba při ukládání")
-			QtWidgets.QMessageBox.information(self, "Uložení proběhlo úspěšně", "Načítaní ID3 tagov z názvu souboru proběhlo úspěšně.")
+				QtWidgets.QMessageBox.information(self, "Uložení proběhlo úspěšně",
+												  "Načítaní ID3 tagov z názvu souboru proběhlo úspěšně.")
+			except Exception as e:
+				QtWidgets.QMessageBox.warning(self, "Chyba", str(e))
 		else:
 			QtWidgets.QMessageBox.warning(self, "Není načtený soubor",
 										  "Nebyl načten žádný hudební soubor, nelze uložit změny.")
 
 	def guessID3Tags(self, songName="Ego_V-meste-snov_01_Precedens_2018_Hip-hop"):
+		'''Guess ID3 tag from name of song.
+
+		Arguments:
+
+			songName {String} -- song name
+
+		Returns:
+
+			OrderedDict -- Dictionary containing guessed ID3 tags
+
+		Raises:
+
+			Exception -- [description]
+		'''
 		ID3Tags = ["artist", "songName", "track", "album", "year", "genre"]
 		splitted = songName.split("_")
+		if len(splitted) > 6:
+			raise Exception("Bolo rozpoznaných viacero ID3 tagov než je povoloné. Je potrebný formát: Interpret_Nazov_trackID_album_rok_zanr")
 		return OrderedDict(zip(ID3Tags, splitted))
 
 	def convertSecsToString(self, secs, hours_digits=0, long_format=False):
