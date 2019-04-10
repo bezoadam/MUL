@@ -1,5 +1,7 @@
 from typing import Dict, Set, List
 from PyQt5 import QtWidgets, uic, Qt, QtGui
+from collections import OrderedDict
+import os, re
 
 from mp3player.MP3Table import MP3Table, MP3File, MP3Tag
 
@@ -100,6 +102,15 @@ class EditWindow(QtWidgets.QMainWindow):
 			"\%co - comment",
 			"\%d - digits from right widget",
 		]
+		self.abbrevationsDict: OrderedDict = OrderedDict({
+			"songName": "\sn(",
+			"artist": "\\ar(",
+			"album": "\\al(",
+			"track": "\\tr(",
+			"year": "\ye(",
+			"genre": "\ge(",
+			"comment": "\co(",
+		})
 		self.tags = [i for i in MP3File.property_2_name if i != "cover"]
 		self.parseBox.addItems(self.tags)
 		self.parseAbrBox.addItems(self.parseAbbreviations)
@@ -277,10 +288,29 @@ class EditWindow(QtWidgets.QMainWindow):
 			return
 		for idx, mp3file in enumerate(self.data):
 			if self.isGuessTagEdit():
+				songName = os.path.splitext(mp3file.baseName)[0]
 				print("Parsing the parseLine: {}".format(self.parseLine.text()))
 				# TODO: Set correctly the values
+				regexDict = {}
 				for key in mp3file.tmpProperties:
-					mp3file.tmpProperties[key].setText("Tags")
+					if key != "fileName":
+						regex = re.escape(self.abbrevationsDict[key]) + "(.+?)" + "\\)"
+						m = re.search(regex, self.parseLine.text())
+						if m:
+							found = m.group(1)
+							regexDict[m.span()[0]] = {key: found}
+							#print("{}: {}".format(key,found))
+						mp3file.tmpProperties[key].setText("Tags")
+				print(regexDict)
+				for key in sorted(regexDict):
+					value = regexDict[key]
+					regex = list(value.values())[0]
+					occurence = re.findall(regex + "-", songName)
+					print(songName)
+					if len(occurence) > 0:
+						print("{}: {}".format(list(value.keys())[0],occurence))
+						songName = songName.replace(occurence[0], '')
+
 			else:
 				if self.valueBox.currentIndex() == 0:
 					mp3file.tmpProperties[self.property].setText(mp3file.__getattribute__(self.property).text())
