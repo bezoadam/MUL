@@ -291,8 +291,6 @@ class EditWindow(QtWidgets.QMainWindow):
 		for idx, mp3file in enumerate(self.data):
 			if self.isGuessTagEdit():
 				songName = os.path.splitext(mp3file.baseName)[0]
-				print("Parsing the parseLine: {}".format(self.parseLine.text()))
-				# TODO: Set correctly the values
 				regexDict = {}
 
 				''' Fill regexDict by abbrevations in parse line '''
@@ -311,7 +309,6 @@ class EditWindow(QtWidgets.QMainWindow):
 					found = m.group(1)
 					regexDict[m.span()[0]] = {"delimeter": found}
 
-				print(regexDict)
 				for key in sorted(regexDict):
 					value = regexDict[key]
 					regex = list(value.values())[0]
@@ -322,11 +319,8 @@ class EditWindow(QtWidgets.QMainWindow):
 					except re.error:
 						pass
 
-					print(songName)
 					if len(occurence) > 0:
-						print("{}: {}".format(ID3Tag,occurence[0]))
 						if ID3Tag != "delimeter":
-
 							mp3file.tmpProperties[ID3Tag].setText(occurence[0])
 						songName = songName.replace(occurence[0], '', 1)
 
