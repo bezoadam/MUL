@@ -1421,6 +1421,12 @@ class MP3Player(QtWidgets.QMainWindow):
 		self.previousVolume = self.volume
 		self.volume = 0
 		self.updateVolume(0)
+		print(self.guessID3Tags())
+
+	def guessID3Tags(self, songName="Ego_V-meste-snov_01_Precedens_2018_Hip-hop"):
+		ID3Tags = ["TPE1", "TIT2", "TRCK", "TALB", "TDRC", "TCON"]
+		splitted = songName.split("_")
+		return OrderedDict(zip(ID3Tags, splitted))
 
 	def unmute(self):
 		'''Unmute player
