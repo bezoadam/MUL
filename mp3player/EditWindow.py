@@ -388,6 +388,12 @@ class EditWindow(QtWidgets.QMainWindow):
 					value = mp3file.tmpProperties[property].text()
 					if value != "":
 						mp3file.saveTagToFile(property, value)
+		elif self.isGuessNameEdit():
+			# Rename file if needed
+			for mp3file in self.data:
+				value = mp3file.tmpProperties["fileName"].text()
+				if value != "":
+					mp3file.saveTagToFile("fileName", value + ".mp3")
 		else:
 			if not self.validateChanges():
 				# TODO Show warning messagebox if errors occured
