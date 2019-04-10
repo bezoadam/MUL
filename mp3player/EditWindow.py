@@ -9,6 +9,7 @@ class EditWindow(QtWidgets.QMainWindow):
 	COVER_EDIT = 0
 	COMMON_EDIT = 1
 	GUESS_TAG_EDIT = 2
+	GUESS_NAME_EDIT = 3
 
 	def __init__(self, *args):
 		'''Initializer of SortTable
@@ -118,21 +119,23 @@ class EditWindow(QtWidgets.QMainWindow):
 		self.parseAbrBox.addItems(self.parseAbbreviations)
 		self.valueAbrBox.addItems(self.abbreviations)
 
-	def exec(self, data: List[MP3File], property=None, guess_tag=False):
+	def exec(self, data: List[MP3File], property=None, guess_tag=False, guess_name=False):
 		self.data = data
 		self.property = property
 		self.guess_tag = guess_tag
-
-		self.setEditType(self.property, self.guess_tag)
+		self.guess_name = guess_name
+		self.setEditType(self.property, self.guess_tag, self.guess_name)
 
 		self.init()
 
 		self.mainWindow.setEnabled(False)
 		super().show()
 
-	def setEditType(self, property, guess_tag):
+	def setEditType(self, property, guess_tag, guess_name):
 		if guess_tag:
 			self.editType = self.GUESS_TAG_EDIT
+		elif guess_name:
+			self.editType = self.GUESS_NAME_EDIT
 		elif property == "cover":
 			self.editType = self.COVER_EDIT
 		elif property in MP3File.property_2_name:
@@ -140,6 +143,9 @@ class EditWindow(QtWidgets.QMainWindow):
 
 	def isGuessTagEdit(self):
 		return self.editType == self.GUESS_TAG_EDIT
+
+	def isGuessNameEdit(self):
+		return self.editType == self.GUESS_NAME_EDIT
 
 	def isCommonEdit(self):
 		return self.editType == self.COMMON_EDIT
@@ -186,7 +192,7 @@ class EditWindow(QtWidgets.QMainWindow):
 			self.initEditCoverWidgets()
 		elif self.isCommonEdit():
 			self.initEditCommonTagsWidgets()
-		elif self.isGuessTagEdit():
+		elif self.isGuessTagEdit() or self.isGuessNameEdit():
 			self.initEditGuessTagsWidgets()
 		else:
 			raise ValueError("Wrong property type")
@@ -239,7 +245,7 @@ class EditWindow(QtWidgets.QMainWindow):
 			self.valueLine.setText(self.valueLine.text() + self.abbreviations[index].split(" ")[0])
 
 	def createHeaders(self):
-		if self.isGuessTagEdit():
+		if self.isGuessTagEdit() or self.isGuessNameEdit():
 			header_labels = [j for (i, j) in MP3File.property_2_name.items() if i != "cover"]
 			self.tableWidget.horizontalHeader().setMinimumSectionSize(70)
 			self.tableWidget.horizontalHeader().setDefaultSectionSize(70)
@@ -268,6 +274,15 @@ class EditWindow(QtWidgets.QMainWindow):
 					self.tableWidget.setItem(rowCount, idx, mp3file.tmpProperties[key])
 				elif key != "cover":
 					mp3file.tmpProperties[key] = MP3Tag(mp3file, key, "")
+					self.tableWidget.setItem(rowCount, idx, mp3file.tmpProperties[key])
+		elif self.isGuessNameEdit():
+			# insert all other tags to table
+			for idx, key in enumerate(mp3file.property_2_tag):
+				if key == "fileName":
+					mp3file.tmpProperties[key] = MP3Tag(mp3file, key, mp3file.fileName)
+					self.tableWidget.setItem(rowCount, idx, mp3file.tmpProperties[key])
+				elif key != "cover":
+					mp3file.tmpProperties[key] = MP3Tag(mp3file, key, mp3file.__getattribute__(key).text())
 					self.tableWidget.setItem(rowCount, idx, mp3file.tmpProperties[key])
 		else:
 			self.tableWidget.setItem(rowCount, 0, MP3Tag(mp3file, self.property, mp3file.__getattribute__(self.property).text()))
@@ -323,7 +338,8 @@ class EditWindow(QtWidgets.QMainWindow):
 						if ID3Tag != "delimeter":
 							mp3file.tmpProperties[ID3Tag].setText(occurence[0])
 						songName = songName.replace(occurence[0], '', 1)
-
+			elif self.isGuessNameEdit():
+				pass
 			else:
 				if self.valueBox.currentIndex() == 0:
 					mp3file.tmpProperties[self.property].setText(mp3file.__getattribute__(self.property).text())

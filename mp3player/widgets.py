@@ -316,6 +316,7 @@ class MP3Player(QtWidgets.QMainWindow):
 		self.deleteCoverButton.clicked.connect(self.handleDeleteCoverButton)
 		self.renameFileButton.clicked.connect(self.handleRenameFileButton)
 		self.guessTagButton.clicked.connect(self.handleGuessTagButton)
+		self.guessNameButton.clicked.connect(self.handleGuessNameButton)
 		self.saveChangesButton.clicked.connect(self.handleSaveChangesButton)
 		self.groupEditButton.clicked.connect(self.handleGroupEditButton)
 		self.playButton.clicked.connect(self.handlePlayButton)
@@ -815,7 +816,7 @@ class MP3Player(QtWidgets.QMainWindow):
 		'''Handle rename file button
 		'''
 		if self.tableWidget.checkedRowsCount() > 0:
-			self.editWindow.exec(self.tableWidget.getCheckedMP3Files(), "fileName", False)
+			self.editWindow.exec(self.tableWidget.getCheckedMP3Files(), "fileName", False, False)
 		else:
 			QtWidgets.QMessageBox.warning(self, "Nevybrané žádné soubory", "Nebyly vybrány žádné soubory pro přejmenování.")
 
@@ -823,9 +824,17 @@ class MP3Player(QtWidgets.QMainWindow):
 		'''Handle guess tags button
 		'''
 		if self.tableWidget.checkedRowsCount() > 0:
-			self.editWindow.exec(self.tableWidget.getCheckedMP3Files(), None, True)
+			self.editWindow.exec(self.tableWidget.getCheckedMP3Files(), None, True, False)
 		else:
 			QtWidgets.QMessageBox.warning(self, "Nevybrané žádné soubory", "Nebyly vybrány žádné soubory pro odhad tagů.")
+
+	def handleGuessNameButton(self):
+		'''Handle guess name button
+		'''
+		if self.tableWidget.checkedRowsCount() > 0:
+			self.editWindow.exec(self.tableWidget.getCheckedMP3Files(), None, False, True)
+		else:
+			QtWidgets.QMessageBox.warning(self, "Nevybrané žádné soubory", "Nebyly vybrány žádné soubory pro odhad názvu souboru.")
 
 	def handleGroupEditButton(self):
 		'''Handle group edit button

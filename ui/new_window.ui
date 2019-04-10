@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>991</width>
-    <height>707</height>
+    <width>1183</width>
+    <height>754</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -942,6 +942,19 @@
             <string>Odhad tagů</string>
            </property>
           </widget>
+          <widget class="QPushButton" name="guessNameButton">
+           <property name="geometry">
+            <rect>
+             <x>20</x>
+             <y>280</y>
+             <width>151</width>
+             <height>31</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>Odhad názvu</string>
+           </property>
+          </widget>
          </widget>
         </item>
        </layout>
@@ -955,8 +968,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>991</width>
-     <height>30</height>
+     <width>1183</width>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
