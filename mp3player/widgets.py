@@ -1307,6 +1307,7 @@ class MP3Player(QtWidgets.QMainWindow):
 				for key, value in ID3Tags.items():
 					if value not in ["APIC", "PATH"]:
 						self.mp3file.saveTagToFile(key, value)
+						self.__getattribute__(key + "Line").setText(value)
 			except Exception:
 				QtWidgets.QMessageBox.warning(self, "Nelze uložit data", "Vyskytla se chyba při ukládání")
 			QtWidgets.QMessageBox.information(self, "Uložení proběhlo úspěšně", "Načítaní ID3 tagov z názvu souboru proběhlo úspěšně.")
