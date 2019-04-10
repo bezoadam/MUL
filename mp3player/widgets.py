@@ -1087,6 +1087,7 @@ class MP3Player(QtWidgets.QMainWindow):
 		self.previousButton.clicked.connect(self.handlePreviousButton)
 		self.shuffleButton.clicked.connect(self.handleShuffleButton)
 		self.muteButton.clicked.connect(self.handleMuteButton)
+		self.loadID3Tags.clicked.connect(self.handleLoadID3Tags)
 		QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+A"), self).activated.connect(self.handleSelectAll)
 		QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+D"), self).activated.connect(self.handleUnSelectAll)
 		QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+O"), self).activated.connect(self.handleOpenFileButton)
@@ -1298,6 +1299,15 @@ class MP3Player(QtWidgets.QMainWindow):
 			mp3file = MP3File(path)
 			self.tableWidget.addMP3(mp3file)
 
+	def handleLoadID3Tags(self):
+		guessID3Tags = self.guessID3Tags(os.path.splitext(self.mp3file.baseName)[0])
+
+
+	def guessID3Tags(self, songName="Ego_V-meste-snov_01_Precedens_2018_Hip-hop"):
+		ID3Tags = ["TPE1", "TIT2", "TRCK", "TALB", "TDRC", "TCON"]
+		splitted = songName.split("_")
+		return OrderedDict(zip(ID3Tags, splitted))
+
 	def convertSecsToString(self, secs, hours_digits=0, long_format=False):
 		'''Convert seconds to human readable format
 
@@ -1422,11 +1432,6 @@ class MP3Player(QtWidgets.QMainWindow):
 		self.volume = 0
 		self.updateVolume(0)
 		print(self.guessID3Tags())
-
-	def guessID3Tags(self, songName="Ego_V-meste-snov_01_Precedens_2018_Hip-hop"):
-		ID3Tags = ["TPE1", "TIT2", "TRCK", "TALB", "TDRC", "TCON"]
-		splitted = songName.split("_")
-		return OrderedDict(zip(ID3Tags, splitted))
 
 	def unmute(self):
 		'''Unmute player
@@ -1575,7 +1580,7 @@ class MP3Player(QtWidgets.QMainWindow):
 				self.saveTags()
 				self.redrawCoverImage()
 			except FileExistsError:
-				QtWidgets.QMessageBox.warning(self, "NNelze přejmenovat soubor", "Nelze přejmenovat soubor, soubor již existuje, nebo byl zadán prázdný řetězec.")
+				QtWidgets.QMessageBox.warning(self, "Nelze přejmenovat soubor", "Nelze přejmenovat soubor, soubor již existuje, nebo byl zadán prázdný řetězec.")
 			except FileNotFoundError:
 				QtWidgets.QMessageBox.warning(self, "Obrázek alba nenalazen", "Obrázek alba neexistuje.")
 			except NameError:
