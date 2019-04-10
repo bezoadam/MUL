@@ -339,7 +339,23 @@ class EditWindow(QtWidgets.QMainWindow):
 							mp3file.tmpProperties[ID3Tag].setText(occurence[0])
 						songName = songName.replace(occurence[0], '', 1)
 			elif self.isGuessNameEdit():
-				pass
+				regexList = []
+				regexDict = {}
+				songName = self.parseLine.text()
+				''' Fill regexDict by abbrevations in parse line '''
+				for key in mp3file.tmpProperties:
+					if key != "fileName":
+						regex = self.abbrevationsDict[key] + ")"
+						if regex in self.parseLine.text():
+							regexList.append(key)
+
+				for key in mp3file.property_2_tag:
+					if key in regexList:
+						value = mp3file.__getattribute__(key).text()
+						regexDict[key] = value
+						songName = songName.replace(self.abbrevationsDict[key] + ")", value)
+
+				mp3file.tmpProperties["fileName"].setText(songName)
 			else:
 				if self.valueBox.currentIndex() == 0:
 					mp3file.tmpProperties[self.property].setText(mp3file.__getattribute__(self.property).text())
