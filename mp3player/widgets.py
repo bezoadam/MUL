@@ -1300,11 +1300,15 @@ class MP3Player(QtWidgets.QMainWindow):
 			self.tableWidget.addMP3(mp3file)
 
 	def handleLoadID3Tags(self):
-		guessID3Tags = self.guessID3Tags(os.path.splitext(self.mp3file.baseName)[0])
-
+		ID3Tags = self.guessID3Tags(os.path.splitext(self.mp3file.baseName)[0])
+		# Save all other tags
+		if self.mp3file is not None:
+			for key, value in ID3Tags.items():
+				if value not in ["APIC", "PATH"]:
+					self.mp3file.saveTagToFile(key, value)
 
 	def guessID3Tags(self, songName="Ego_V-meste-snov_01_Precedens_2018_Hip-hop"):
-		ID3Tags = ["TPE1", "TIT2", "TRCK", "TALB", "TDRC", "TCON"]
+		ID3Tags = ["artist", "songName", "track", "album", "year", "genre"]
 		splitted = songName.split("_")
 		return OrderedDict(zip(ID3Tags, splitted))
 
