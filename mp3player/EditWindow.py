@@ -294,6 +294,8 @@ class EditWindow(QtWidgets.QMainWindow):
 				print("Parsing the parseLine: {}".format(self.parseLine.text()))
 				# TODO: Set correctly the values
 				regexDict = {}
+
+				''' Fill regexDict by abbrevations in parse line '''
 				for key in mp3file.tmpProperties:
 					if key != "fileName":
 						regex = re.escape(self.abbrevationsDict[key]) + "(.+?)" + "\\)"
@@ -301,12 +303,11 @@ class EditWindow(QtWidgets.QMainWindow):
 						if m:
 							found = m.group(1)
 							regexDict[m.span()[0]] = {key: found}
-							#print("{}: {}".format(key,found))
-						#mp3file.tmpProperties[key].setText("Tags")
 
+				''' Add delimeters '''
 				regex = re.escape("\del(") + "(.+?)" + "\\)"
-				m = re.search(regex, self.parseLine.text())
-				if m:
+				p = re.compile(regex)
+				for m in p.finditer(self.parseLine.text()):
 					found = m.group(1)
 					regexDict[m.span()[0]] = {"delimeter": found}
 
@@ -327,7 +328,7 @@ class EditWindow(QtWidgets.QMainWindow):
 						if ID3Tag != "delimeter":
 
 							mp3file.tmpProperties[ID3Tag].setText(occurence[0])
-						songName = songName.replace(occurence[0], '')
+						songName = songName.replace(occurence[0], '', 1)
 
 			else:
 				if self.valueBox.currentIndex() == 0:
@@ -355,11 +356,18 @@ class EditWindow(QtWidgets.QMainWindow):
 		return True
 
 	def saveChanges(self):
-		if not self.validateChanges():
-			# TODO Show warning messagebox if errors occured
-			return
-		for mp3file in self.data:
-			mp3file.saveTagToFile(self.property, mp3file.tmpProperties[self.property].text())
+		if self.isGuessTagEdit():
+			for idx, mp3file in enumerate(self.data):
+				for property in mp3file.tmpProperties:
+					value = mp3file.tmpProperties[property].text()
+					if value != "":
+						mp3file.saveTagToFile(property, value)
+		else:
+			if not self.validateChanges():
+				# TODO Show warning messagebox if errors occured
+				return
+			for mp3file in self.data:
+				mp3file.saveTagToFile(self.property, mp3file.tmpProperties[self.property].text())
 
 	def loadCoverImageFromBytes(self, bytes=None):
 		'''Method is loading cover image (QPixmap) from bytes

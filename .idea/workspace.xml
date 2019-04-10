@@ -2,8 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="366618c5-3325-4c52-a3ad-94df5257dd5b" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Mp3/2. A ja (prod. Aceman).mp3" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/mp3player/EditWindow.py" beforeDir="false" afterPath="$PROJECT_DIR$/mp3player/EditWindow.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -41,13 +39,13 @@
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
           <entry key="dummy" value="25" />
-          <entry key="py" value="6034" />
+          <entry key="py" value="6382" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
           <entry key="PLAIN_TEXT" value="25" />
-          <entry key="Python" value="6034" />
+          <entry key="Python" value="6382" />
         </counts>
       </usages-collector>
     </session>
@@ -66,8 +64,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/mp3player/MP3Table.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="235">
-              <caret line="211" column="43" selection-start-line="211" selection-start-column="43" selection-end-line="211" selection-end-column="43" />
+            <state relative-caret-position="402">
+              <caret line="29" column="62" lean-forward="true" selection-start-line="29" selection-start-column="62" selection-end-line="29" selection-end-column="62" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
               </folding>
@@ -78,8 +76,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/mp3player/EditWindow.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="571">
-              <caret line="325" column="54" lean-forward="true" selection-start-line="325" selection-start-column="54" selection-end-line="325" selection-end-column="54" />
+            <state relative-caret-position="417">
+              <caret line="363" column="62" selection-start-line="363" selection-start-column="62" selection-end-line="363" selection-end-column="62" />
               <folding>
                 <element signature="e#0#34#0" expanded="true" />
               </folding>
@@ -109,7 +107,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>icon_rc</find>
       <find>fixedSize</find>
       <find>QtGui</find>
       <find>handleDialValueChanged</find>
@@ -135,8 +132,11 @@
       <find>P</find>
       <find>self.data</find>
       <find>OrderedDict</find>
-      <find>parseAbbreviations</find>
       <find>tmpProperties</find>
+      <find>parseAbbreviations</find>
+      <find>saveTagToFile</find>
+      <find>handleFinishButton</find>
+      <find>MP3Tag</find>
     </findStrings>
     <dirStrings>
       <dir>$PROJECT_DIR$/mp3player</dir>
@@ -314,8 +314,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/mp3player/MP3Table.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="235">
-          <caret line="211" column="43" selection-start-line="211" selection-start-column="43" selection-end-line="211" selection-end-column="43" />
+        <state relative-caret-position="402">
+          <caret line="29" column="62" lean-forward="true" selection-start-line="29" selection-start-column="62" selection-end-line="29" selection-end-column="62" />
           <folding>
             <element signature="e#0#9#0" expanded="true" />
           </folding>
@@ -324,8 +324,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/mp3player/EditWindow.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="571">
-          <caret line="325" column="54" lean-forward="true" selection-start-line="325" selection-start-column="54" selection-end-line="325" selection-end-column="54" />
+        <state relative-caret-position="417">
+          <caret line="363" column="62" selection-start-line="363" selection-start-column="62" selection-end-line="363" selection-end-column="62" />
           <folding>
             <element signature="e#0#34#0" expanded="true" />
           </folding>
