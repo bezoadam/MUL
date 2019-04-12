@@ -117,7 +117,7 @@ class EditWindow(QtWidgets.QMainWindow):
 		self.tags = [i for i in MP3File.property_2_name if i != "cover"]
 		self.parseBox.addItems(self.tags)
 		self.parseAbrBox.addItems(self.parseAbbreviations)
-		self.valueAbrBox.addItems(self.abbreviations)
+		self.valueAbrBox.addItems(self.parseAbbreviations)
 
 	def exec(self, data: List[MP3File], property=None, guess_tag=False, guess_name=False):
 		self.data = data
@@ -242,7 +242,7 @@ class EditWindow(QtWidgets.QMainWindow):
 	def handleValueAbrBox(self, index):
 		if index >= 0:
 			self.valueAbrBox.setCurrentIndex(-1)
-			self.valueLine.setText(self.valueLine.text() + self.abbreviations[index].split(" ")[0])
+			self.valueLine.setText(self.valueLine.text() + self.parseAbbreviations[index].split(" ")[0])
 
 	def createHeaders(self):
 		if self.isGuessTagEdit() or self.isGuessNameEdit():
@@ -366,11 +366,22 @@ class EditWindow(QtWidgets.QMainWindow):
 				elif self.valueBox.currentIndex() == 3:
 					mp3file.tmpProperties[self.property].setText(mp3file.__getattribute__(self.property).text().capitalize())
 				elif self.valueBox.currentIndex() == 4:
-					# TODO process value
-					value = self.valueLine.text()
+					regexList = []
+					regexDict = {}
+					valueLineText = self.valueLine.text()
+					''' Fill regexDict by abbrevations in parse line '''
+					for key, value in self.abbrevationsDict.items():
+						if key != "fileName":
+							regex = value + ")"
+							if regex in self.valueLine.text():
+								regexList.append(key)
 
-					value = value.replace("%d", str(self.startIndexSpinBox.value() + idx).zfill(self.digitsSpinBox.value()))
-					mp3file.tmpProperties[self.property].setText(value)
+					for key in mp3file.property_2_tag:
+						if key in regexList:
+							value = mp3file.__getattribute__(key).text()
+							regexDict[key] = value
+							valueLineText = valueLineText.replace(self.abbrevationsDict[key] + ")", value)
+					mp3file.tmpProperties[self.property].setText(valueLineText)
 
 		if self.tableWidget.rowCount() > 0:
 			self.finishButton.setEnabled(True)
