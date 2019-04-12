@@ -117,7 +117,9 @@ class EditWindow(QtWidgets.QMainWindow):
 		self.tags = [i for i in MP3File.property_2_name if i != "cover"]
 		self.parseBox.addItems(self.tags)
 		self.parseAbrBox.addItems(self.parseAbbreviations)
-		self.valueAbrBox.addItems(self.parseAbbreviations)
+		parseAbbreviationsWithCounter = self.parseAbbreviations
+		parseAbbreviationsWithCounter.append("%d - digits from right widget")
+		self.valueAbrBox.addItems(parseAbbreviationsWithCounter)
 
 	def exec(self, data: List[MP3File], property=None, guess_tag=False, guess_name=False):
 		self.data = data
@@ -381,6 +383,8 @@ class EditWindow(QtWidgets.QMainWindow):
 							value = mp3file.__getattribute__(key).text()
 							regexDict[key] = value
 							valueLineText = valueLineText.replace(self.abbrevationsDict[key] + ")", value)
+
+					valueLineText = valueLineText.replace("%d", str(self.startIndexSpinBox.value() + idx).zfill(self.digitsSpinBox.value()))
 					mp3file.tmpProperties[self.property].setText(valueLineText)
 
 		if self.tableWidget.rowCount() > 0:
