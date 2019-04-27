@@ -852,9 +852,10 @@ class EditWindow(QtWidgets.QMainWindow):
 		if self.isGuessTagEdit():
 			for idx, mp3file in enumerate(self.data):
 				for property in mp3file.tmpProperties:
-					value = mp3file.tmpProperties[property].text()
-					if value != "":
-						mp3file.saveTagToFile(property, value)
+					if property in self.property_2_name:
+						value = mp3file.tmpProperties[property].text()
+						if value != "":
+							mp3file.saveTagToFile(property, value)
 		elif self.isGuessNameEdit():
 			# Rename file if needed
 			fileNamesRelPath = [mp3file.tmpProperties["fileName"].text() for mp3file in self.data]
