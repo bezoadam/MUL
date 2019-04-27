@@ -2,13 +2,13 @@ import os
 import math
 import threading
 from collections import OrderedDict, defaultdict
-from typing import Dict, Set, List
+from typing import Dict, List
 import random
 
 import vlc
 import mutagen
 from mutagen.mp3 import MP3
-from mutagen.id3 import ID3, TPE1, TIT2, TRCK, TALB, APIC, TDRC, TCON, COMM
+from mutagen.id3 import ID3, APIC
 from PyQt5 import QtWidgets, uic, Qt, QtGui
 
 import mp3player.edit_window as edit_window
@@ -159,10 +159,6 @@ class MP3File(object):
 
 		del audio
 
-	def canBeSavedToFile(self, propertyName, propertyValue):
-		# TODO
-		pass
-
 	def saveTagToFile(self, propertyName, propertyValue):
 		'''Save individual tag to file using property name and property value
 
@@ -198,6 +194,14 @@ class MP3File(object):
 		self.__getattribute__(propertyName).setText(str(propertyValue))
 
 	def getProperty(self, propertyName):
+		"""Get property value by property name (tag value from tag key)
+
+		Arguments:
+			propertyName {str} -- Property name
+
+		Returns:
+			str -- Property value
+		"""
 		return self.__getattribute__(propertyName).text()
 
 	def initProperties(self):
@@ -823,6 +827,11 @@ class MP3Player(QtWidgets.QMainWindow):
 		event.accept()
 
 	def setEnabled(self, enabled):
+		"""Set enabled (pause the music if another modal window have appeared)
+
+		Arguments:
+			enabled {bool} -- True/False
+		"""
 		if not enabled and self.isPlaying():
 			self.pause()
 		super().setEnabled(enabled)

@@ -1,4 +1,3 @@
-from typing import Dict, Set, List
 from PyQt5 import QtWidgets, uic, Qt, QtGui
 from collections import OrderedDict
 import os
@@ -249,9 +248,6 @@ class SortTable(QtWidgets.QTableWidget):
 		self.setHorizontalHeaderLabels(header_labels)
 		self.setFocusPolicy(Qt.Qt.NoFocus)
 
-	def fillRows(self, data):
-		pass
-
 	def addRow(self, mp3file):
 		'''Add MP3 file to table
 
@@ -277,16 +273,17 @@ class SortTable(QtWidgets.QTableWidget):
 
 
 class EditWindow(QtWidgets.QMainWindow):
+	"""Class for group editing tags
+
+	Arguments:
+		QtWidgets {QMainWindow} -- super class
+	"""
 	COVER_EDIT = 0
 	COMMON_EDIT = 1
 	GUESS_TAG_EDIT = 2
 	GUESS_NAME_EDIT = 3
 
 	def __init__(self, *args):
-		'''Initializer of SortTable
-		'''
-		'''Initializer
-		'''
 		super(QtWidgets.QMainWindow, self).__init__()
 
 		# Load UI
@@ -322,8 +319,8 @@ class EditWindow(QtWidgets.QMainWindow):
 		self.valueBox.currentIndexChanged.connect(self.handleValueBox)
 		self.parseAbrBox.currentIndexChanged.connect(self.handleParseAbrBoxPicked)
 		self.valueAbrBox.currentIndexChanged.connect(self.handleValueAbrBoxPicked)
-		self.parseLine.textChanged.connect(self.parseChanged)
-		self.valueLine.textChanged.connect(self.valueChanged)
+		self.parseLine.textChanged.connect(self.parseLineChanged)
+		self.valueLine.textChanged.connect(self.valueLineChanged)
 		self.digitsSpinBox.valueChanged.connect(self.refreshDataInTable)
 		self.startIndexSpinBox.valueChanged.connect(self.refreshDataInTable)
 		self.chooseImageButton.clicked.connect(self.handleChooseImageButton)
@@ -343,7 +340,7 @@ class EditWindow(QtWidgets.QMainWindow):
 			self.parseLabel,
 			self.parseBox,
 			self.parseLine,
-			self.parseAbrBox,
+			# self.parseAbrBox,
 			self.groupBox,
 			self.sideWidget,
 			self.tableWidget,
@@ -355,6 +352,7 @@ class EditWindow(QtWidgets.QMainWindow):
 			self.sideWidget,
 			self.tableWidget,
 		]
+		# Items for combo box
 		self.abbreviations = OrderedDict({
 			"fi": "Jméno souboru",
 			"al": "Album",
@@ -366,6 +364,7 @@ class EditWindow(QtWidgets.QMainWindow):
 			"co": "Komentář",
 			"d": "Číslice z widgetu",
 		})
+		# Items for funcionality
 		self.abbrevationsDict: OrderedDict = OrderedDict({
 			"fi": "fileName",
 			"sn": "songName",
@@ -376,27 +375,54 @@ class EditWindow(QtWidgets.QMainWindow):
 			"ge": "genre",
 			"co": "comment",
 		})
+		# Lists for further usage injected by parent
 		self.property_2_name = property_2_name
 		self.property_2_tag = property_2_tag
 		self.coverExtensions = coverExtensions
 		self.tags = [i for i in self.property_2_name if i != "cover"]
-		self.parseBox.addItems(self.tags)
+		self.parseBoxItemsKeys = [key for key in self.property_2_name if key != "cover"]
+
+		# Add items for combo boxes
+		self.parseBox.addItems([self.property_2_name[i] for i in self.parseBoxItemsKeys])
 		self.parseAbrBox.addItems(["\\k" + key + "() - " + val for key, val in self.abbreviations.items()][:-1])
 		self.valueAbrBox.addItems(["\\k" + key + " - " + val for key, val in self.abbreviations.items()])
 
-	def exec(self, data: List, property=None, guess_tag=False, guess_name=False):
+	def exec(self, data, property=None, guess_tag=False, guess_name=False):
+		"""Start of the EditWindow (called from parent - MP3Player)
+
+		Arguments:
+
+			data {List} -- List of mp3files
+
+		Keyword Arguments:
+
+			property {str} -- Property which ve should group edit (default: {None})
+			guess_tag {bool} -- If we should guess tags from file (or parse is more precise description) (default: {False})
+			guess_name {bool} -- If we should set file name from file (default: {False})
+		"""
 		self.data = data
 		self.property = property
 		self.guess_tag = guess_tag
 		self.guess_name = guess_name
+
+		# Get the choice for editing
 		self.setEditType(self.property, self.guess_tag, self.guess_name)
 
+		# Initialize window (Set visibility, clear lines, etc.)
 		self.init()
 
 		self.mainWindow.setEnabled(False)
 		super().show()
 
 	def setEditType(self, property, guess_tag, guess_name):
+		"""Set edit type based on the input values
+
+		Arguments:
+
+			property {str} -- Property which ve should group edit
+			guess_tag {bool} -- If we should guess tags from file (or parse is more precise description)
+			guess_name {bool} -- If we should set file name from file
+		"""
 		if guess_tag:
 			self.editType = self.GUESS_TAG_EDIT
 		elif guess_name:
@@ -407,18 +433,44 @@ class EditWindow(QtWidgets.QMainWindow):
 			self.editType = self.COMMON_EDIT
 
 	def isGuessTagEdit(self):
+		"""Is edit window in Guess tag mode
+
+		Returns:
+
+			bool -- True/False
+		"""
 		return self.editType == self.GUESS_TAG_EDIT
 
 	def isGuessNameEdit(self):
+		"""Is edit window in Guess name mode
+
+		Returns:
+
+			bool -- True/False
+		"""
 		return self.editType == self.GUESS_NAME_EDIT
 
 	def isCommonEdit(self):
+		"""Is edit window in common edit mode
+
+		Returns:
+
+			bool -- True/False
+		"""
 		return self.editType == self.COMMON_EDIT
 
 	def isCoverEdit(self):
+		"""Is edit window in cover edit mode
+
+		Returns:
+
+			bool -- True/False
+		"""
 		return self.editType == self.COVER_EDIT
 
 	def initEditCoverWidgets(self):
+		"""Initializer for setting widget states for cover edit
+		"""
 		self.name = self.property_2_name[self.property]
 		self.tag = self.property_2_tag[self.property]
 		self.titleLabel.setText("Úprava položky: " + self.name)
@@ -427,6 +479,8 @@ class EditWindow(QtWidgets.QMainWindow):
 		[i.setVisible(True) for i in self.coverWidgets]
 
 	def initEditGuessTagsWidgets(self):
+		"""Initializer for setting widget states for guess tag
+		"""
 		self.titleLabel.setText("Vytvoření tagů ze jména souboru")
 
 		[i.setVisible(False) for i in self.commonTagsWidgets + self.coverWidgets]
@@ -436,6 +490,8 @@ class EditWindow(QtWidgets.QMainWindow):
 		self.parseAbrBox.setEnabled(True)
 
 	def initEditGuessNameWidgets(self):
+		"""Initializer for setting widget states for guess name
+		"""
 		self.titleLabel.setText("Vytvoření jména souboru z tagů")
 
 		[i.setVisible(False) for i in self.commonTagsWidgets + self.coverWidgets]
@@ -445,6 +501,8 @@ class EditWindow(QtWidgets.QMainWindow):
 		self.parseAbrBox.setEnabled(True)
 
 	def initEditCommonTagsWidgets(self):
+		"""Initializer for setting widget states for common edit
+		"""
 		self.name = self.property_2_name[self.property]
 		self.tag = self.property_2_tag[self.property]
 		self.titleLabel.setText("Úprava položky: " + self.name)
@@ -457,6 +515,12 @@ class EditWindow(QtWidgets.QMainWindow):
 		self.valueAbrBox.setEnabled(False)
 
 	def init(self):
+		"""General initializer
+
+		Raises:
+
+			ValueError: If the property has wrong type
+		"""
 		self.upButton.setEnabled(False)
 		self.downButton.setEnabled(False)
 		self.removeButton.setEnabled(False)
@@ -488,19 +552,62 @@ class EditWindow(QtWidgets.QMainWindow):
 		self.valueLine.setText("")
 		self.parseLine.setText("")
 
-	def parseChanged(self, text):
+	def parseLineChanged(self, text):
+		"""If parse lineEdit changed handle it (Used for parsing the string)
+
+		Arguments:
+
+			text {str} -- parseLine text
+		"""
 		self.refreshDataInTable()
 
-	def valueChanged(self, text):
+	def getParseProperty(self):
+		"""Get parse property from parseBox to work with parseLine
+
+		Returns:
+
+			str -- parse property
+		"""
+		return self.parseBoxItemsKeys[self.parseBox.currentIndex()]
+
+	def valueLineChanged(self, text):
+		"""Handle value lineEdit change (Used for substitution and final string)
+
+		Arguments:
+
+			text {str} -- valueLine text
+		"""
 		self.refreshDataInTable()
+
+	def addThirdItemToTable(self):
+		"""Add 3rd item to table as a helper item for better understading of parsing lines
+		"""
+		if self.data is not None:
+			for idx, mp3file in enumerate(self.data):
+				mp3file.tmpProperties["tmp"] = mp3player.mp3window.MP3Tag(mp3file, "tmp", mp3file.getProperty(self.getParseProperty()))
+				self.tableWidget.setItem(idx, 2, mp3file.tmpProperties["tmp"])
 
 	def handleParseBox(self, index):
+		"""Handle parseBox change (for common edit handle change of combox box for parsing another line)
+
+		Arguments:
+
+			index {int} -- parse comboBox index
+		"""
 		if index >= 0:
+			self.createHeaders()
+			self.addThirdItemToTable()
 			self.parseLine.setEnabled(True)
 			self.parseAbrBox.setEnabled(True)
 		self.refreshDataInTable()
 
 	def handleValueBox(self, index):
+		"""Handle valueBox change (for common edit handle change of combox box for parsing another line)
+
+		Arguments:
+
+			index {int} -- parse comboBox index
+		"""
 		if index == 4:
 			self.valueLine.setEnabled(True)
 			self.valueAbrBox.setEnabled(True)
@@ -511,6 +618,13 @@ class EditWindow(QtWidgets.QMainWindow):
 		self.refreshDataInTable()
 
 	def handleParseAbrBoxPicked(self, index):
+		"""Handle selecting item in abbreviation box
+
+		It inserts an abbreviation in the lineEdit
+
+		Arguments:
+			index {int} -- Index of selected item
+		"""
 		if index >= 0:
 			self.parseAbrBox.setCurrentIndex(-1)
 			if self.isGuessNameEdit():
@@ -519,28 +633,53 @@ class EditWindow(QtWidgets.QMainWindow):
 				self.parseLine.setText(self.parseLine.text() + "\\k" + list(self.abbreviations.items())[index][0] + "(.+?)")
 
 	def handleValueAbrBoxPicked(self, index):
+		"""Handle selecting item in abbreviation box
+
+		It inserts an abbreviation in the lineEdit
+
+		Arguments:
+			index {int} -- Index of selected item
+		"""
 		if index >= 0:
 			self.valueAbrBox.setCurrentIndex(-1)
 			self.valueLine.setText(self.valueLine.text() + "\\k" + list(self.abbreviations.items())[index][0])
 
 	def createHeaders(self):
+		"""Create headers in SortTable with respect to the edit type
+		"""
+		# If guess tag or guess name eidt show all tags
 		if self.isGuessTagEdit() or self.isGuessNameEdit():
 			header_labels = [j for (i, j) in self.property_2_name.items() if i != "cover"]
 			self.tableWidget.horizontalHeader().setMinimumSectionSize(70)
 			self.tableWidget.horizontalHeader().setDefaultSectionSize(70)
 			[self.tableWidget.setColumnWidth(i, 70) for i in range(len(header_labels))]
+		# Otherwise set header columns for original and new tag name and helper tag values if selected
 		else:
 			header_labels = ["Originální", "Nový"]
-			self.tableWidget.horizontalHeader().setMinimumSectionSize(200)
-			self.tableWidget.horizontalHeader().setDefaultSectionSize(200)
-			[self.tableWidget.setColumnWidth(i, 200) for i in range(len(header_labels))]
+			size = 200
+			if self.parseBox.currentIndex() >= 0:
+				size = 150
+				header_labels.append(self.property_2_name[self.parseBoxItemsKeys[self.parseBox.currentIndex()]])
+			self.tableWidget.horizontalHeader().setMinimumSectionSize(size)
+			self.tableWidget.horizontalHeader().setDefaultSectionSize(size)
+			[self.tableWidget.setColumnWidth(i, size) for i in range(len(header_labels))]
 		self.tableWidget.createHeaders(header_labels)
 
 	def fillRows(self, data):
+		"""Fill rows in SortTable
+
+		Arguments:
+			data {List} -- List of mp3files
+		"""
 		for mp3file in self.data:
 			self.addRow(mp3file)
 
 	def addRow(self, mp3file):
+		"""Add row to SortTable
+
+		Arguments:
+			mp3file {MP3File} -- mp3file class
+		"""
 		# Get current number of rows and insert new row
 		rowCount = self.tableWidget.rowCount()
 		self.tableWidget.insertRow(rowCount)
@@ -565,14 +704,25 @@ class EditWindow(QtWidgets.QMainWindow):
 					self.tableWidget.setItem(rowCount, idx, mp3file.tmpProperties[key])
 		else:
 			self.tableWidget.setItem(rowCount, 0, mp3player.mp3window.MP3Tag(mp3file, self.property, mp3file.__getattribute__(self.property).text()))
-			mp3file.tmpProperties[self.property] = mp3player.mp3window.MP3Tag(mp3file, self.property, "Test")
+			mp3file.tmpProperties[self.property] = mp3player.mp3window.MP3Tag(mp3file, self.property, "")
 			self.tableWidget.setItem(rowCount, 1, mp3file.tmpProperties[self.property])
 
 	def removeRow(self, row):
+		"""Remove row from SortTable
+
+		Arguments:
+			row {MP3File} -- mp3file class
+		"""
 		self.data.pop(row)
 		self.refreshDataInTable()
 
 	def switchRows(self, row1, row2):
+		"""Switch two ros in SortTable
+
+		Arguments:
+			row1 {int} -- Index of first row
+			row2 {int} -- Index of second row
+		"""
 		tmp = self.data[row1]
 		self.data[row1] = self.data[row2]
 		self.data[row2] = tmp
@@ -580,22 +730,53 @@ class EditWindow(QtWidgets.QMainWindow):
 		self.refreshDataInTable()
 
 	def searchString(self, pattern, inputString):
+		"""Search string using patterna nd regular expressions, it returns SRE_Match object
+
+		Arguments:
+			pattern {str} -- Pattern from user input (lineEdit)
+			inputString {str} -- Input string (can be user input or tag)
+
+		Returns:
+			SRE_Match -- Object from re.search
+		"""
 		for key in self.abbrevationsDict:
 			prefix = re.escape("\\k{}(".format(key))
 			suffix = re.escape(")")
 			pattern = re.sub("{}(.*?){}".format(prefix, suffix), r"(?P<{}>\1)".format(key), pattern)
 		return re.search(pattern, inputString)
 
-	def subString(self, mp3file, inputString, group=None, idx=None):
+	def subString(self, mp3file, inputString, regexSearch=None, idx=None):
+		"""Substitute string with tags or interval of numbers or custom substitutions
+
+		Arguments:
+			mp3file {MP3File} -- mp3file instance
+			inputString {str} -- Input string for substitution
+
+		Keyword Arguments:
+			regexSearch {SRE_Match} -- objetc from re.search from customly parsed tag (default: {None})
+			idx {int} -- number from interval (default: {None})
+
+		Returns:
+			str -- Substitued string
+		"""
 		for key in self.abbrevationsDict:
 			prefix = re.escape("\\k{}".format(key))
 			inputString = re.sub(prefix, mp3file.getProperty(self.abbrevationsDict[key]), inputString)
+
+		if regexSearch is not None:
+			for i in range(1, len(regexSearch.groups()) + 1):
+				try:
+					inputString = re.sub(r"\\{}".format(i), regexSearch.group(i), inputString)
+				except Exception:
+					pass
 
 		if idx is not None and isinstance(idx, int):
 			inputString = re.sub(re.escape("\\kd"), str(self.startIndexSpinBox.value() + idx).zfill(self.digitsSpinBox.value()), inputString)
 		return inputString
 
 	def refreshDataInTable(self):
+		"""Refresh data in SortTable (updating values or clearing columns when not regex not parsed properly)
+		"""
 		if self.data is None:
 			return
 
@@ -628,8 +809,14 @@ class EditWindow(QtWidgets.QMainWindow):
 				elif self.valueBox.currentIndex() == 3:
 					mp3file.tmpProperties[self.property].setText(mp3file.getProperty(self.property).capitalize())
 				elif self.valueBox.currentIndex() == 4:
+					regexSearch = None
+					if self.parseBox.currentIndex() >= 0 and self.parseLine.text() != "":
+						try:
+							regexSearch = self.searchString(self.parseLine.text(), mp3file.getProperty(self.parseBoxItemsKeys[self.parseBox.currentIndex()]))
+						except Exception:
+							regexSearch = None
 					try:
-						propertyValue = self.subString(mp3file, self.valueLine.text(), idx=idx)
+						propertyValue = self.subString(mp3file, self.valueLine.text(), regexSearch=regexSearch, idx=idx)
 						mp3file.tmpProperties[self.property].setText(propertyValue)
 					except Exception:
 						mp3file.tmpProperties[self.property].setText("")
@@ -640,6 +827,15 @@ class EditWindow(QtWidgets.QMainWindow):
 			self.finishButton.setEnabled(False)
 
 	def validateChanges(self, fileNamesRelPath, fileNamesAbsPath):
+		"""Validate changes before executing the changes
+
+		Arguments:
+			fileNamesRelPath {List} -- List of relative paths of mp3files
+			fileNamesAbsPath {List} -- List of absolute paths of mp3files
+
+		Returns:
+			bool -- True/False
+		"""
 		if self.property == "fileName" or self.isGuessNameEdit():
 			for idx, mp3file in enumerate(self.data):
 				if not mp3file.canRenameFilename(fileNamesRelPath[idx]) or fileNamesAbsPath.count(fileNamesAbsPath[idx]) > 1:
@@ -648,6 +844,11 @@ class EditWindow(QtWidgets.QMainWindow):
 		return True
 
 	def saveChanges(self):
+		"""Save changes
+
+		Returns:
+			bool -- True/False (if successfull or not)
+		"""
 		if self.isGuessTagEdit():
 			for idx, mp3file in enumerate(self.data):
 				for property in mp3file.tmpProperties:
@@ -732,10 +933,14 @@ class EditWindow(QtWidgets.QMainWindow):
 		event.accept()
 
 	def handleFinishButton(self):
+		"""Handler for finish button (only if saving the changes were done successfully)
+		"""
 		if self.saveChanges():
 			self.mainWindow.redrawCoverImage()
 			self.mainWindow.fillLineEdits()
 			self.close()
 
 	def handleCancelButton(self):
+		"""Hanadle close button
+		"""
 		self.close()
