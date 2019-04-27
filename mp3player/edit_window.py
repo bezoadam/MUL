@@ -857,8 +857,8 @@ class EditWindow(QtWidgets.QMainWindow):
 						mp3file.saveTagToFile(property, value)
 		elif self.isGuessNameEdit():
 			# Rename file if needed
-			fileNamesRelPath = [mp3file.tmpProperties[self.property].text() for mp3file in self.data]
-			fileNamesAbsPath = [os.path.join(mp3file.baseDir, mp3file.tmpProperties[self.property].text()) for mp3file in self.data]
+			fileNamesRelPath = [mp3file.tmpProperties["fileName"].text() for mp3file in self.data]
+			fileNamesAbsPath = [os.path.join(mp3file.baseDir, mp3file.tmpProperties["fileName"].text()) for mp3file in self.data]
 			if not self.validateChanges(fileNamesRelPath, fileNamesAbsPath):
 				return False
 
