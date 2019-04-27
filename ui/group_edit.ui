@@ -17,7 +17,11 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Hromadná úprava</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>icon/window_icon.png</normaloff>icon/window_icon.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_2">
@@ -39,14 +43,14 @@
       <item>
        <widget class="QPushButton" name="finishButton">
         <property name="text">
-         <string>Finish</string>
+         <string>Dokončit</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QPushButton" name="cancelButton">
         <property name="text">
-         <string>Cancel</string>
+         <string>Zrušit</string>
         </property>
        </widget>
       </item>
@@ -172,7 +176,7 @@
             </rect>
            </property>
            <property name="text">
-            <string>Down</string>
+            <string>Dolů</string>
            </property>
            <property name="checkable">
             <bool>false</bool>
@@ -188,7 +192,7 @@
             </rect>
            </property>
            <property name="text">
-            <string>Up</string>
+            <string>Nahoru</string>
            </property>
            <property name="shortcut">
             <string>Ctrl+S</string>
@@ -204,7 +208,7 @@
             </rect>
            </property>
            <property name="text">
-            <string>Remove</string>
+            <string>Odstranit</string>
            </property>
            <property name="checkable">
             <bool>false</bool>
@@ -683,7 +687,7 @@
   <customwidget>
    <class>SortTable</class>
    <extends>QTableWidget</extends>
-   <header>mp3player.widgets</header>
+   <header>mp3player.edit_window</header>
   </customwidget>
  </customwidgets>
  <resources/>

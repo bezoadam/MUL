@@ -11,7 +11,11 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>MP3 tag editor &amp; player</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>icon/window_icon.png</normaloff>icon/window_icon.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_2">
@@ -850,19 +854,6 @@
             <string>Odebrat MP3</string>
            </property>
           </widget>
-          <widget class="QPushButton" name="renameFileButton">
-           <property name="geometry">
-            <rect>
-             <x>20</x>
-             <y>160</y>
-             <width>151</width>
-             <height>31</height>
-            </rect>
-           </property>
-           <property name="text">
-            <string>Přejmenovat MP3</string>
-           </property>
-          </widget>
           <widget class="QPushButton" name="saveChangesButton">
            <property name="geometry">
             <rect>
@@ -920,7 +911,7 @@
            <property name="geometry">
             <rect>
              <x>20</x>
-             <y>200</y>
+             <y>160</y>
              <width>151</width>
              <height>31</height>
             </rect>
@@ -933,7 +924,7 @@
            <property name="geometry">
             <rect>
              <x>20</x>
-             <y>240</y>
+             <y>200</y>
              <width>151</width>
              <height>31</height>
             </rect>
@@ -946,7 +937,7 @@
            <property name="geometry">
             <rect>
              <x>20</x>
-             <y>280</y>
+             <y>240</y>
              <width>151</width>
              <height>31</height>
             </rect>
@@ -969,7 +960,7 @@
      <x>0</x>
      <y>0</y>
      <width>1183</width>
-     <height>22</height>
+     <height>30</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -991,17 +982,17 @@
   <customwidget>
    <class>MP3Table</class>
    <extends>QTableWidget</extends>
-   <header>mp3player.widgets</header>
+   <header>mp3player.mp3window</header>
   </customwidget>
   <customwidget>
    <class>TimeSlider</class>
    <extends>QSlider</extends>
-   <header>mp3player.widgets</header>
+   <header>mp3player.sliders</header>
   </customwidget>
   <customwidget>
    <class>VolumeSlider</class>
    <extends>QSlider</extends>
-   <header>mp3player.widgets</header>
+   <header>mp3player.sliders</header>
   </customwidget>
  </customwidgets>
  <resources/>

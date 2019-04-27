@@ -17,7 +17,11 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Výběr tagu pro úpravu</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>icon/window_icon.png</normaloff>icon/window_icon.png</iconset>
   </property>
   <property name="modal">
    <bool>true</bool>

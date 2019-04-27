@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets
 
-from mp3player.widgets import MP3Player
+from mp3player.mp3window import MP3Player
 
 
 def main():

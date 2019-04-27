@@ -1,4 +1,5 @@
-from PyQt5 import QtWidgets, uic, Qt, QtGui
+from PyQt5 import QtWidgets, QtGui
+
 
 class JumpSlider(QtWidgets.QSlider):
 	'''Custom Slider class for click->jump behaviour
@@ -65,7 +66,6 @@ class JumpSlider(QtWidgets.QSlider):
 		'''
 		self.mainWindow = mainWindow
 		self.valueChanged.connect(self.handleValueChanged)
-
 
 
 class VolumeSlider(JumpSlider):
