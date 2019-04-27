@@ -516,7 +516,7 @@ class EditWindow(QtWidgets.QMainWindow):
 			if self.isGuessNameEdit():
 				self.parseLine.setText(self.parseLine.text() + "\\k" + list(self.abbreviations.items())[index][0])
 			else:
-				self.parseLine.setText(self.parseLine.text() + "\\k" + list(self.abbreviations.items())[index][0] + "(.*?)")
+				self.parseLine.setText(self.parseLine.text() + "\\k" + list(self.abbreviations.items())[index][0] + "(.+?)")
 
 	def handleValueAbrBoxPicked(self, index):
 		if index >= 0:
@@ -612,60 +612,7 @@ class EditWindow(QtWidgets.QMainWindow):
 							mp3file.tmpProperties[self.abbrevationsDict[key]].setText(found.group(key))
 						except (IndexError, AttributeError):
 							mp3file.tmpProperties[self.abbrevationsDict[key]].setText("")
-
-
-				# songName = os.path.splitext(mp3file.baseName)[0]
-				# regexDict = {}
-
-				# ''' Fill regexDict by abbrevations in parse line '''
-				# for key in mp3file.tmpProperties:
-				# 	if key != "fileName":
-				# 		regex = re.escape(self.abbrevationsDict[key]) + "(.+?)" + "\\)"
-				# 		m = re.search(regex, self.parseLine.text())
-				# 		if m:
-				# 			found = m.group(1)
-				# 			regexDict[m.span()[0]] = {key: found}
-
-				# ''' Add delimeters '''
-				# regex = re.escape("\del(") + "(.+?)" + "\\)"
-				# p = re.compile(regex)
-				# for m in p.finditer(self.parseLine.text()):
-				# 	found = m.group(1)
-				# 	regexDict[m.span()[0]] = {"delimeter": found}
-
-				# for key in sorted(regexDict):
-				# 	value = regexDict[key]
-				# 	regex = list(value.values())[0]
-				# 	ID3Tag = list(value.keys())[0]
-				# 	occurence = []
-				# 	try:
-				# 		occurence = re.findall(regex, songName)
-				# 	except re.error:
-				# 		pass
-
-				# 	if len(occurence) > 0:
-				# 		if ID3Tag != "delimeter":
-				# 			mp3file.tmpProperties[ID3Tag].setText(occurence[0])
-				# 		else:
-				# 			mp3file.tmpProperties[ID3Tag].setText("")
-				# 		songName = songName.replace(occurence[0], '', 1)
-
 			elif self.isGuessNameEdit():
-				# regexList = []
-				# regexDict = {}
-				# songName = self.parseLine.text()
-				# ''' Fill regexDict by abbrevations in parse line '''
-				# for key in mp3file.tmpProperties:
-				# 	if key != "fileName":
-				# 		regex = self.abbrevationsDict[key] + ")"
-				# 		if regex in self.parseLine.text():
-				# 			regexList.append(key)
-
-				# for key in mp3file.property_2_tag:
-				# 	if key in regexList:
-				# 		value = mp3file.__getattribute__(key).text()
-				# 		regexDict[key] = value
-				# 		songName = songName.replace(self.abbrevationsDict[key] + ")", value)
 				try:
 					fileName = self.subString(mp3file, self.parseLine.text(), idx=idx)
 					mp3file.tmpProperties["fileName"].setText(fileName)
@@ -673,32 +620,19 @@ class EditWindow(QtWidgets.QMainWindow):
 					mp3file.tmpProperties["fileName"].setText("")
 			else:
 				if self.valueBox.currentIndex() == 0:
-					mp3file.tmpProperties[self.property].setText(mp3file.__getattribute__(self.property).text())
+					mp3file.tmpProperties[self.property].setText(mp3file.getProperty(self.property))
 				elif self.valueBox.currentIndex() == 1:
-					mp3file.tmpProperties[self.property].setText(mp3file.__getattribute__(self.property).text().lower())
+					mp3file.tmpProperties[self.property].setText(mp3file.getProperty(self.property).lower())
 				elif self.valueBox.currentIndex() == 2:
-					mp3file.tmpProperties[self.property].setText(mp3file.__getattribute__(self.property).text().upper())
+					mp3file.tmpProperties[self.property].setText(mp3file.getProperty(self.property).upper())
 				elif self.valueBox.currentIndex() == 3:
-					mp3file.tmpProperties[self.property].setText(mp3file.__getattribute__(self.property).text().capitalize())
+					mp3file.tmpProperties[self.property].setText(mp3file.getProperty(self.property).capitalize())
 				elif self.valueBox.currentIndex() == 4:
-					regexList = []
-					regexDict = {}
-					valueLineText = self.valueLine.text()
-					''' Fill regexDict by abbrevations in parse line '''
-					for key, value in self.abbrevationsDict.items():
-						if key != "fileName":
-							regex = value + ")"
-							if regex in self.valueLine.text():
-								regexList.append(key)
-
-					for key in mp3file.property_2_tag:
-						if key in regexList:
-							value = mp3file.__getattribute__(key).text()
-							regexDict[key] = value
-							valueLineText = valueLineText.replace(self.abbrevationsDict[key] + ")", value)
-
-					valueLineText = valueLineText.replace("%d", str(self.startIndexSpinBox.value() + idx).zfill(self.digitsSpinBox.value()))
-					mp3file.tmpProperties[self.property].setText(valueLineText)
+					try:
+						propertyValue = self.subString(mp3file, self.valueLine.text(), idx=idx)
+						mp3file.tmpProperties[self.property].setText(propertyValue)
+					except Exception:
+						mp3file.tmpProperties[self.property].setText("")
 
 		if self.tableWidget.rowCount() > 0:
 			self.finishButton.setEnabled(True)
