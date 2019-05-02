@@ -1,11 +1,9 @@
-# MUL
-Přehrávač a editor ID3 tagů v MP3 souborech
+## Prehrávač a editor ID3 tagov v MP3 súboroch
 
-
-Run
-
-`pip3 install -r requirements.txt`
-
-then
-
+####Spustenie:
+`python3 install -r requirements.txt`
 `python3 mp3_player.py`
+
+####Autori:
+`Adam Bezak - xbezak01`
+`Jan Stratil - xtrat10`
