@@ -690,6 +690,24 @@
    <header>mp3player.edit_window</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>parseBox</tabstop>
+  <tabstop>parseLine</tabstop>
+  <tabstop>parseAbrBox</tabstop>
+  <tabstop>valueBox</tabstop>
+  <tabstop>valueLine</tabstop>
+  <tabstop>valueAbrBox</tabstop>
+  <tabstop>startIndexSpinBox</tabstop>
+  <tabstop>digitsSpinBox</tabstop>
+  <tabstop>removeImageButton</tabstop>
+  <tabstop>tableWidget</tabstop>
+  <tabstop>finishButton</tabstop>
+  <tabstop>cancelButton</tabstop>
+  <tabstop>upButton</tabstop>
+  <tabstop>downButton</tabstop>
+  <tabstop>removeButton</tabstop>
+  <tabstop>chooseImageButton</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

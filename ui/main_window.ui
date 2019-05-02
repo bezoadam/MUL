@@ -995,6 +995,37 @@
    <header>mp3player.sliders</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>tagTab</tabstop>
+  <tabstop>songNameLine</tabstop>
+  <tabstop>artistLine</tabstop>
+  <tabstop>albumLine</tabstop>
+  <tabstop>genreLine</tabstop>
+  <tabstop>yearLine</tabstop>
+  <tabstop>trackLine</tabstop>
+  <tabstop>commentLine</tabstop>
+  <tabstop>fileNameLine</tabstop>
+  <tabstop>coverLine</tabstop>
+  <tabstop>chooseImageButton</tabstop>
+  <tabstop>coverImageGraphicView</tabstop>
+  <tabstop>deleteCoverButton</tabstop>
+  <tabstop>visualizerGraphicView</tabstop>
+  <tabstop>timeSlider</tabstop>
+  <tabstop>playButton</tabstop>
+  <tabstop>stopButton</tabstop>
+  <tabstop>previousButton</tabstop>
+  <tabstop>nextButton</tabstop>
+  <tabstop>shuffleButton</tabstop>
+  <tabstop>muteButton</tabstop>
+  <tabstop>volumeSlider</tabstop>
+  <tabstop>tableWidget</tabstop>
+  <tabstop>saveChangesButton</tabstop>
+  <tabstop>openFileButton</tabstop>
+  <tabstop>removeFileButton</tabstop>
+  <tabstop>groupEditButton</tabstop>
+  <tabstop>guessTagButton</tabstop>
+  <tabstop>guessNameButton</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

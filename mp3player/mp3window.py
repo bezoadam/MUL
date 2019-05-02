@@ -9,7 +9,7 @@ import vlc
 import mutagen
 from mutagen.mp3 import MP3
 from mutagen.id3 import ID3, APIC
-from PyQt5 import QtWidgets, uic, Qt, QtGui
+from PyQt5 import QtWidgets, uic, Qt, QtGui, QtCore
 
 import mp3player.edit_window as edit_window
 
@@ -738,6 +738,11 @@ class MP3Player(QtWidgets.QMainWindow):
 		self.tagDialog = edit_window.TagDialog(self)
 		self.editWindow = edit_window.EditWindow(self)
 
+		self.timer = QtCore.QTimer(self)
+		self.timer.setSingleShot(False)
+		self.timer.timeout.connect(self.updatingPlayerState)
+		self.timer.start(200)
+
 	def setupHandlers(self):
 		'''Setup handlers to the signals and shortcuts also
 		'''
@@ -841,7 +846,7 @@ class MP3Player(QtWidgets.QMainWindow):
 		'''
 		# Window state
 		self.closed = False
-		self.updatingPlayerState()
+		# self.updatingPlayerState()
 
 		super().show(*args, **kwargs)
 
@@ -941,15 +946,16 @@ class MP3Player(QtWidgets.QMainWindow):
 	def updatingPlayerState(self):
 		'''Update mp3 player state periodically
 		'''
+		if self.isPlaying() and self.vlcPlayer.get_time() >= self.songLength * 1000:
+			self.nextSong()
+			# threading.Timer(0.2, self.updatingPlayerState).start()
+
 		if self.isPlaying() or self.isPaused():
 			songTime = int(self.vlcPlayer.get_time() * 0.001)
 			self.updateTimes(currentSeconds=songTime)
 
-		if self.isPlaying() and self.vlcPlayer.get_time() >= self.songLength * 1000:
-			self.nextSong()
-
-		if not self.closed:
-			threading.Timer(0.2, self.updatingPlayerState).start()
+		# if not self.closed:
+			# threading.Timer(0.2, self.updatingPlayerState).start()
 
 	def handleChooseImageButton(self):
 		'''Handle choose image button, select path and redraw cover image
