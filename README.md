@@ -3,10 +3,12 @@
 
 #### Installation:
 `python3 install -r requirements.txt`
+
 `python3 mp3_player.py`
 
 #### Authors:
 `Adam Bezak - xbezak01`
+
 `Jan Stratil - xtrat10`
 
 #### This application was created as school project for Multimedia subject at FIT VUT.
